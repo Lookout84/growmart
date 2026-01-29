@@ -1,0 +1,255 @@
+[
+  {
+    "model": "products.category",
+    "pk": 1,
+    "fields": {
+      "name": "Плодові дерева",
+      "slug": "plodovi-dereva",
+      "description": "Саджанці яблунь, груш, слив, черешень, вишень, абрикосів та інших плодових дерев",
+      "parent": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 2,
+    "fields": {
+      "name": "Плодові чагарники",
+      "slug": "plodovi-chaharnyky",
+      "description": "Саджанці малини, смородини, аґрусу, порічок та інших ягідних чагарників",
+      "parent": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 3,
+    "fields": {
+      "name": "Виноград",
+      "slug": "vynohrad",
+      "description": "Саджанці столових та технічних сортів винограду",
+      "parent": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 4,
+    "fields": {
+      "name": "Полуниця",
+      "slug": "polunytsya",
+      "description": "Саджанці полуниці: ремонтантні, класичні та нові сорти",
+      "parent": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 5,
+    "fields": {
+      "name": "Саджанці троянд",
+      "slug": "sadzhantsi-troyand",
+      "description": "Паркові, чайно-гібридні, плетисті, штамбові троянди",
+      "parent": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 6,
+    "fields": {
+      "name": "Декоративні рослини",
+      "slug": "dekoratyvni-roslyny",
+      "description": "Туї, ялівці, бузок, гортензії та інші декоративні рослини",
+      "parent": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 7,
+    "fields": {
+      "name": "Колоновидні саджанці",
+      "slug": "kolonovydni-sadzhantsi",
+      "description": "Колоновидні яблуні, груші, черешні - компактні дерева для невеликих ділянок",
+      "parent": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 8,
+    "fields": {
+      "name": "Екзотичні рослини",
+      "slug": "ekzotychni-roslyny",
+      "description": "Інжир, ківі, гранат, хурма, цитрусові та інші екзотичні рослини",
+      "parent": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 9,
+    "fields": {
+      "name": "Квіти & Ліани",
+      "slug": "kvity-liany",
+      "description": "Квіткові цибулини, багаторічники, ліани для вертикального озеленення",
+      "parent": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 10,
+    "fields": {
+      "name": "Спеції & Насіння",
+      "slug": "spetsiyi-nasinnya",
+      "description": "Насіння овочів, пряні трави, спеції для вирощування",
+      "parent": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 11,
+    "fields": {
+      "name": "Дерево-сад",
+      "slug": "derevo-sad",
+      "description": "Комбіновані саджанці - кілька сортів на одному дереві",
+      "parent": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 12,
+    "fields": {
+      "name": "Все для щеплення",
+      "slug": "vse-dlya-shcheplennya",
+      "description": "Підщепний матеріал, інструменти та матеріали для щеплення",
+      "parent": null,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 13,
+    "fields": {
+      "name": "Яблуні",
+      "slug": "yabluni",
+      "description": "Літні, осінні та зимові сорти яблунь",
+      "parent": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 14,
+    "fields": {
+      "name": "Груші",
+      "slug": "hrushi",
+      "description": "Літні та осінні сорти груш",
+      "parent": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 15,
+    "fields": {
+      "name": "Черешні",
+      "slug": "chereshni",
+      "description": "Ранні, середні та пізні сорти черешень",
+      "parent": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 16,
+    "fields": {
+      "name": "Вишні",
+      "slug": "vyshni",
+      "description": "Кислі та солодкі сорти вишень",
+      "parent": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 17,
+    "fields": {
+      "name": "Сливи",
+      "slug": "slyvy",
+      "description": "Жовті, сині та червоні сорти слив",
+      "parent": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 18,
+    "fields": {
+      "name": "Абрикоси",
+      "slug": "abrykosy",
+      "description": "Морозостійкі сорти абрикосів",
+      "parent": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 19,
+    "fields": {
+      "name": "Персики та нектарини",
+      "slug": "persyky-nektaryny",
+      "description": "Соковиті персики та нектарини",
+      "parent": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 20,
+    "fields": {
+      "name": "Малина",
+      "slug": "malyna",
+      "description": "Звичайна та ремонтантна малина",
+      "parent": 2,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 21,
+    "fields": {
+      "name": "Смородина",
+      "slug": "smorodyna",
+      "description": "Чорна, червона та біла смородина",
+      "parent": 2,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 22,
+    "fields": {
+      "name": "Аґрус",
+      "slug": "ahrus",
+      "description": "Зелений, червоний та чорний аґрус",
+      "parent": 2,
+      "is_active": true
+    }
+  },
+  {
+    "model": "products.category",
+    "pk": 23,
+    "fields": {
+      "name": "Жимолость",
+      "slug": "zhymolost",
+      "description": "Їстівна жимолость - рання ягода",
+      "parent": 2,
+      "is_active": true
+    }
+  }
+]

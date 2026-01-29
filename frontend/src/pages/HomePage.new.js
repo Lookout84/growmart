@@ -63,11 +63,7 @@ const HomePage = () => {
               className="category-card"
             >
               <div className="category-image">
-                {category.image ? (
-                  <img src={category.image} alt={category.name} />
-                ) : (
-                  <span className="category-emoji">{categoryEmojis[category.name] || '🌿'}</span>
-                )}
+                {categoryEmojis[category.name] || '🌿'}
               </div>
               <div className="category-info">
                 <h3>{category.name}</h3>

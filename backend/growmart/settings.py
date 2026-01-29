@@ -18,6 +18,10 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lamb
 
 # Application definition
 INSTALLED_APPS = [
+    # Local apps (first to ensure migrations run in correct order)
+    'users',
+    
+    # Django apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -32,10 +36,9 @@ INSTALLED_APPS = [
     'django_filters',
     'drf_yasg',
     
-    # Local apps
+    # Other local apps
     'products',
     'orders',
-    'users',
     'cart',
     'payments',
 ]
@@ -116,7 +119,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'uk-ua'
-TIME_ZONE = 'Europe/Kiev'
+TIME_ZONE = 'Europe/Kyiv'
 USE_I18N = True
 USE_TZ = True
 

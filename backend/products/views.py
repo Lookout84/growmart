@@ -1,9 +1,10 @@
 from rest_framework import viewsets, filters, permissions
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Avg
-from .models import Category, Product, Review
+from .models import Category, Product, Review, Banner, BlogPost, BlogCategory
 from .serializers import (CategorySerializer, ProductListSerializer, 
-                         ProductDetailSerializer, ReviewSerializer, ReviewCreateSerializer)
+                         ProductDetailSerializer, ReviewSerializer, ReviewCreateSerializer,
+                         BannerSerializer, BlogPostSerializer, BlogCategorySerializer)
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -65,3 +66,30 @@ class ReviewViewSet(viewsets.ModelViewSet):
         if product_id:
             queryset = queryset.filter(product_id=product_id)
         return queryset
+
+
+class BannerViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = BannerSerializer
+    
+    def get_queryset(self):
+        queryset = Banner.objects.filter(is_active=True).order_by('order')
+        return queryset
+
+
+class BlogCategoryViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = BlogCategory.objects.filter(is_active=True)
+    serializer_class = BlogCategorySerializer
+    lookup_field = 'slug'
+
+
+class BlogPostViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = BlogPostSerializer
+    lookup_field = 'slug'
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['category', 'author']
+    search_fields = ['title', 'content', 'excerpt']
+    ordering_fields = ['created_at', 'title']
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        return BlogPost.objects.filter(is_published=True)

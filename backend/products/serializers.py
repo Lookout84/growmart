@@ -1,11 +1,21 @@
 from rest_framework import serializers
-from .models import Category, Product, ProductImage, Review
+from .models import Category, Product, ProductImage, Review, Banner, BlogPost, BlogCategory
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+    
     class Meta:
         model = Category
         fields = ['id', 'name', 'slug', 'description', 'image', 'parent', 'is_active']
+    
+    def get_image(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -75,3 +85,25 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
+
+
+class BannerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Banner
+        fields = ['id', 'title', 'subtitle', 'image', 'link', 'button_text', 'order']
+
+
+class BlogCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BlogCategory
+        fields = ['id', 'name', 'slug', 'description', 'is_active']
+
+
+class BlogPostSerializer(serializers.ModelSerializer):
+    category = BlogCategorySerializer(read_only=True)
+    author = serializers.StringRelatedField()
+    
+    class Meta:
+        model = BlogPost
+        fields = ['id', 'title', 'slug', 'excerpt', 'content', 'featured_image',
+                 'category', 'author', 'created_at', 'updated_at']
