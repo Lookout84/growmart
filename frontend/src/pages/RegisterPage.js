@@ -55,6 +55,7 @@ const RegisterPage = () => {
       <div className="container">
         <div className="auth-card">
           <h1>Реєстрація</h1>
+          <p className="auth-subtitle">створення особистого кабінету</p>
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">

@@ -47,6 +47,7 @@ const LoginPage = () => {
       <div className="container">
         <div className="auth-card">
           <h1>Вхід</h1>
+          <p className="auth-subtitle">в особистий кабінет</p>
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">
