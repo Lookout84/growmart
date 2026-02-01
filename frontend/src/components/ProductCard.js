@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import './ProductCard.css';
 
 const ProductCard = ({ product }) => {
-  const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const imageUrl = product.primary_image || '/placeholder.png';
 
   const handleAddToCart = (e) => {
     e.preventDefault();
-    console.log('Add to cart:', product.id, quantity);
+    console.log('Add to cart:', product.id);
     // TODO: Implement cart functionality
   };
 
@@ -18,145 +16,95 @@ const ProductCard = ({ product }) => {
     setIsWishlisted(!isWishlisted);
   };
 
-  const incrementQuantity = (e) => {
-    e.preventDefault();
-    if (quantity < product.stock) {
-      setQuantity(quantity + 1);
-    }
-  };
-
-  const decrementQuantity = (e) => {
-    e.preventDefault();
-    if (quantity > 1) {
-      setQuantity(quantity - 1);
-    }
-  };
+  const rating = product.average_rating || 5;
+  const reviewCount = product.reviews_count || 0;
 
   return (
-    <div className="product-card">
-      {/* Badges */}
-      {product.is_featured && (
-        <div className="card-badge card-badge-popular">Популярні</div>
-      )}
-      {product.is_new && (
-        <div className="card-badge card-badge-new">Новинка</div>
-      )}
-      
-      {/* Wishlist Button */}
-      <button 
-        className={`wishlist-heart ${isWishlisted ? 'active' : ''}`}
-        onClick={toggleWishlist}
-        aria-label="Add to wishlist"
-      >
-        ♥
-      </button>
+    <Link 
+      to={`/products/${product.slug}`} 
+      className="group block bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 h-full flex flex-col border border-gray-100 hover:border-gray-200"
+    >
+      {/* Image Container */}
+      <div className="relative overflow-hidden bg-gray-100 aspect-square">
+        {/* Image */}
+        <img 
+          src={imageUrl} 
+          alt={product.name}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
 
-      <Link to={`/products/${product.slug}`} className="product-image-link">
-        <div className="product-image-wrapper">
-          <img src={imageUrl} alt={product.name} />
-          <div className="watermark">🌿 Зелений куточок</div>
-        </div>
-      </Link>
-
-      <div className="product-content">
-        {/* Product Meta */}
-        <div className="product-meta">
-          <span className="product-code">Код товару: {product.sku || product.id}</span>
-          <span className="product-reviews">
-            ⭐ {product.average_rating || 5} ({product.reviews_count || 0} відгуків)
-          </span>
-          {product.planting_season && (
-            <span className="product-season">✓ НА ВЕСНУ 2026</span>
-          )}
-        </div>
-
-        {/* Product Title */}
-        <Link to={`/products/${product.slug}`} className="product-title-link">
-          <h3 className="product-title">{product.name}</h3>
-        </Link>
-
-        {/* Product Specs */}
-        <div className="product-specs">
-          {product.variety && (
-            <div className="spec-item">
-              <span className="spec-label">Сорт:</span>
-              <span className="spec-value">{product.variety}</span>
-            </div>
-          )}
-          {product.ripening_time && (
-            <div className="spec-item">
-              <span className="spec-label">Стиглість:</span>
-              <span className="spec-value">{product.ripening_time}</span>
-            </div>
-          )}
-          {product.fruit_weight && (
-            <div className="spec-item">
-              <span className="spec-label">Маса плоду:</span>
-              <span className="spec-value">{product.fruit_weight}</span>
-            </div>
-          )}
-          {product.age && (
-            <div className="spec-item">
-              <span className="spec-label">Вік саджанця:</span>
-              <span className="spec-value">{product.age}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Price */}
-        <div className="product-price-section">
-          {product.old_price && (
-            <span className="price-old">{Math.round(product.old_price)} ГРН</span>
-          )}
-          <span className="price-current">{Math.round(product.final_price)} <span className="currency">ГРН</span></span>
-        </div>
-
-        {/* Package Options */}
-        {product.package_type && (
-          <div className="package-options">
-            <button className="package-btn package-btn-primary">
-              відкритий корінь
-            </button>
-            <button className="package-btn package-btn-secondary">
-              в горшику 10л
-            </button>
-          </div>
-        )}
-
-        {/* Quantity and Add to Cart */}
-        <div className="product-actions">
-          <div className="quantity-controls">
-            <button 
-              className="qty-btn"
-              onClick={decrementQuantity}
-              disabled={quantity <= 1}
-            >
-              −
-            </button>
-            <input 
-              type="number" 
-              className="qty-input" 
-              value={quantity}
-              readOnly
-            />
-            <button 
-              className="qty-btn"
-              onClick={incrementQuantity}
-              disabled={quantity >= product.stock}
-            >
-              +
-            </button>
-          </div>
-          <button 
-            className="add-to-cart-btn"
-            onClick={handleAddToCart}
-            disabled={!product.in_stock}
-          >
-            🛒 Купити
-          </button>
-        </div>
+        {/* Wishlist Button - Top Right */}
+        <button 
+          className={`absolute top-4 right-4 text-2xl z-20 transition-all drop-shadow-lg hover:scale-110 ${
+            isWishlisted ? 'text-red-500' : 'text-gray-300 hover:text-red-500'
+          }`}
+          onClick={(e) => {
+            e.preventDefault();
+            toggleWishlist(e);
+          }}
+        >
+          ♥
+        </button>
       </div>
-    </div>
+
+      {/* Content */}
+      <div className="p-5 flex flex-col gap-3 flex-1">
+        {/* Product Code */}
+        <p className="text-xs text-gray-500 font-medium tracking-wide">
+          Код товара: {product.sku || product.id}
+        </p>
+
+        {/* Title - maksimalno 3 reda */}
+        <h3 className="font-semibold text-gray-800 text-sm line-clamp-3 leading-tight min-h-12">
+          {product.name}
+        </h3>
+
+        {/* Rating and Reviews */}
+        <div className="flex items-center gap-2">
+          {/* Stars */}
+          <div className="flex gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <span 
+                key={i}
+                className={`text-sm ${
+                  i < Math.floor(rating) ? 'text-orange-400' : 'text-gray-300'
+                }`}
+              >
+                ★
+              </span>
+            ))}
+          </div>
+          {/* Review Count */}
+          <p className="text-xs text-gray-500">
+            💬 {reviewCount} відгуків
+          </p>
+        </div>
+
+        {/* Price Section */}
+        <div className="flex items-baseline gap-2.5 mt-auto">
+          {product.old_price && (
+            <span className="text-sm text-gray-400 line-through font-medium">
+              {Math.round(product.old_price)} грн
+            </span>
+          )}
+          <span className="text-xl font-bold text-red-600">
+            {Math.round(product.final_price || product.price)} грн
+          </span>
+        </div>
+
+        {/* Add to Cart Button */}
+        <button 
+          onClick={(e) => {
+            e.preventDefault();
+            handleAddToCart(e);
+          }}
+          disabled={!product.in_stock}
+          className="w-full bg-teal-500 hover:bg-teal-600 disabled:bg-gray-300 text-white rounded-2xl py-3 font-bold text-sm transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:cursor-not-allowed disabled:scale-100"
+        >
+          🛒 Купити
+        </button>
+      </div>
+    </Link>
   );
 };
 

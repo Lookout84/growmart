@@ -3,21 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import { useAuthStore, useCartStore } from '../store';
-import './CartPage.css';
+
 
 const CartPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
   const { cart, setCart, clearCart } = useCartStore();
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchCart();
-    } else {
-      setLoading(false);
-    }
-  }, [isAuthenticated]);
 
   const fetchCart = async () => {
     try {
@@ -29,6 +21,14 @@ const CartPage = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCart();
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
 
   const handleUpdateQuantity = async (itemId, quantity) => {
     try {

@@ -4,9 +4,12 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm cache clean --force && npm install --no-cache --legacy-peer-deps
 
 COPY . .
+
+ARG REACT_APP_API_URL=http://backend:8000
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
 EXPOSE 3000
 

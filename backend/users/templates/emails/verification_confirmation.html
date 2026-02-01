@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #4caf50 0%, #1b5e20 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .content h2 {
+            color: #1b5e20;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .message-box {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .message-box p {
+            margin: 0;
+            color: #1b5e20;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #4caf50;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .cta-button:hover {
+            background-color: #1b5e20;
+        }
+        .features {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .features h3 {
+            color: #1b5e20;
+            margin-top: 0;
+        }
+        .features ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .features li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        .features li:before {
+            content: "✓";
+            color: #4caf50;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            color: #666;
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            border-top: 1px solid #ddd;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .social-links {
+            margin-top: 15px;
+        }
+        .social-links a {
+            color: #4caf50;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>✅ {{ site_name }}</h1>
+            <p>Ваш акаунт верифіковано</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                <p>Привіт, <strong>{{ first_name }}</strong>!</p>
+            </div>
+
+            <h2>Акаунт успішно верифіковано</h2>
+
+            <p>Ваш акаунт у системі <strong>{{ site_name }}</strong> був успішно верифіковано адміністратором. Тепер ви маєте повний доступ до всіх можливостей нашого сервісу.</p>
+
+            <div class="message-box">
+                <p>🎉 Вітаємо! Ви вже можете розпочати покупки та користуватися всіма функціями платформи.</p>
+            </div>
+
+            <!-- Features -->
+            <div class="features">
+                <h3>Що тепер доступно:</h3>
+                <ul>
+                    <li>Повний доступ до каталогу рослин</li>
+                    <li>Створення замовлень та оплата</li>
+                    <li>Прослідкування статусу замовлення</li>
+                    <li>Збереження улюблених товарів</li>
+                    <li>Отримання оновлень та новин</li>
+                    <li>Звернення до служби підтримки</li>
+                </ul>
+            </div>
+
+            <!-- CTA Button -->
+            <div style="text-align: center;">
+                <a href="https://localhost:3000" class="cta-button">Перейти на сайт</a>
+            </div>
+
+            <p style="color: #666; font-size: 14px; margin-top: 30px;">
+                Якщо у вас є питання або проблеми, не соромтесь звернутися до нашої служби підтримки.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>&copy; {{ current_year }} {{ site_name }}. Всі права захищені.</p>
+            <p>Це повідомлення було надіслано на вашу запит верифікації акаунту.</p>
+            <div class="social-links">
+                <a href="https://localhost:3000">Веб-сайт</a>
+                <a href="mailto:info@zelenykutochok.ua">Email підтримки</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -12,7 +12,7 @@ class Category(models.Model):
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, 
                                related_name='children', verbose_name='Батьківська категорія')
     is_active = models.BooleanField(default=True, verbose_name='Активна')
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

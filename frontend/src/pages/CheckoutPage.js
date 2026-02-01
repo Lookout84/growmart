@@ -3,7 +3,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import { useAuthStore, useCartStore } from '../store';
-import './CheckoutPage.css';
+
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -43,7 +43,7 @@ const CheckoutPage = () => {
     setLoading(true);
 
     try {
-      const response = await api.post('/api/orders/', formData);
+      await api.post('/api/orders/', formData);
       clearCart();
       toast.success('Замовлення успішно оформлено!');
       navigate(`/orders`);

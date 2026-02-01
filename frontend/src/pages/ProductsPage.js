@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import ProductCard from '../components/ProductCard';
-import './ProductsPage.css';
+
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
@@ -14,11 +14,6 @@ const ProductsPage = () => {
     max_price: '',
     in_stock: false,
   });
-
-  useEffect(() => {
-    fetchCategories();
-    fetchProducts();
-  }, [filters]);
 
   const fetchCategories = async () => {
     try {
@@ -48,91 +43,105 @@ const ProductsPage = () => {
     }
   };
 
+  useEffect(() => {
+    fetchCategories();
+    fetchProducts();
+  }, [filters]);
+
   const handleFilterChange = (key, value) => {
     setFilters({ ...filters, [key]: value });
   };
 
   return (
-    <div className="products-page">
-      <div className="container">
-        <h1>Каталог товарів</h1>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container py-8">
+        <h1 className="text-4xl font-bold text-primary mb-8">Каталог товарів</h1>
 
-        <div className="products-layout">
-          <aside className="filters-sidebar">
-            <div className="filter-group">
-              <h3>Пошук</h3>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Пошук товарів..."
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-              />
-            </div>
-
-            <div className="filter-group">
-              <h3>Категорія</h3>
-              <select
-                className="form-control"
-                value={filters.category}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-              >
-                <option value="">Всі категорії</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <h3>Ціна</h3>
-              <div className="price-range">
+        <div className="flex gap-8">
+          {/* Sidebar */}
+          <aside className="w-64 flex-shrink-0">
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              {/* Search */}
+              <div className="mb-6">
+                <h3 className="text-lg font-bold mb-3">Пошук</h3>
                 <input
-                  type="number"
-                  className="form-control"
-                  placeholder="Від"
-                  value={filters.min_price}
-                  onChange={(e) => handleFilterChange('min_price', e.target.value)}
-                />
-                <span>-</span>
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="До"
-                  value={filters.max_price}
-                  onChange={(e) => handleFilterChange('max_price', e.target.value)}
+                  type="text"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                  placeholder="Пошук товарів..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
                 />
               </div>
-            </div>
 
-            <div className="filter-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={filters.in_stock}
-                  onChange={(e) => handleFilterChange('in_stock', e.target.checked)}
-                />
-                Тільки в наявності
-              </label>
+              {/* Category */}
+              <div className="mb-6">
+                <h3 className="text-lg font-bold mb-3">Категорія</h3>
+                <select
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                  value={filters.category}
+                  onChange={(e) => handleFilterChange('category', e.target.value)}
+                >
+                  <option value="">Всі категорії</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Price */}
+              <div className="mb-6">
+                <h3 className="text-lg font-bold mb-3">Ціна</h3>
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="number"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                    placeholder="Від"
+                    value={filters.min_price}
+                    onChange={(e) => handleFilterChange('min_price', e.target.value)}
+                  />
+                  <span className="flex items-center">−</span>
+                  <input
+                    type="number"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                    placeholder="До"
+                    value={filters.max_price}
+                    onChange={(e) => handleFilterChange('max_price', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* In Stock */}
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={filters.in_stock}
+                    onChange={(e) => handleFilterChange('in_stock', e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <span>Тільки в наявності</span>
+                </label>
+              </div>
             </div>
           </aside>
 
-          <div className="products-content">
+          {/* Products Grid */}
+          <div className="flex-1">
             {loading ? (
-              <div className="loading">
-                <div className="spinner"></div>
+              <div className="flex justify-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
               </div>
             ) : products.length > 0 ? (
-              <div className="grid">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
             ) : (
-              <div className="no-products">
-                <p>Товари не знайдено</p>
+              <div className="text-center py-20 bg-white rounded-lg">
+                <p className="text-xl text-gray-500">Товари не знайдено</p>
               </div>
             )}
           </div>

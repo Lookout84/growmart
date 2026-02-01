@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuthStore } from '../store';
-import './OrdersPage.css';
+
 
 const OrdersPage = () => {
   const { isAuthenticated } = useAuthStore();

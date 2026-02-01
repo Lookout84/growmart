@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
-import './LoginPage.css';
+
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -51,76 +51,104 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="auth-page">
-      <div className="container">
-        <div className="auth-card">
-          <h1>Реєстрація</h1>
-          <p className="auth-subtitle">створення особистого кабінету</p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-50 flex items-center justify-center py-12 px-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-teal-500 to-green-500 px-8 py-12 text-center">
+            <h1 className="text-3xl font-bold text-white mb-2">Реєстрація</h1>
+            <p className="text-teal-100">створення особистого кабінету</p>
+          </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Ім'я користувача *</label>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="px-8 py-8 space-y-4">
+            {/* Username */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Ім'я користувача *
+              </label>
               <input
                 type="text"
                 name="username"
-                className="form-control"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                placeholder="Ваше ім'я користувача"
                 value={formData.username}
                 onChange={handleChange}
                 required
               />
             </div>
 
-            <div className="form-group">
-              <label>Email *</label>
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Email *
+              </label>
               <input
                 type="email"
                 name="email"
-                className="form-control"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                placeholder="ваш@email.com"
                 value={formData.email}
                 onChange={handleChange}
                 required
               />
             </div>
 
-            <div className="form-group">
-              <label>Ім'я</label>
+            {/* First Name */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Ім'я
+              </label>
               <input
                 type="text"
                 name="first_name"
-                className="form-control"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                placeholder="Ваше ім'я"
                 value={formData.first_name}
                 onChange={handleChange}
               />
             </div>
 
-            <div className="form-group">
-              <label>Прізвище</label>
+            {/* Last Name */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Прізвище
+              </label>
               <input
                 type="text"
                 name="last_name"
-                className="form-control"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                placeholder="Ваше прізвище"
                 value={formData.last_name}
                 onChange={handleChange}
               />
             </div>
 
-            <div className="form-group">
-              <label>Телефон</label>
+            {/* Phone */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Телефон
+              </label>
               <input
                 type="tel"
                 name="phone"
-                className="form-control"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                placeholder="+380 XX XXX XX XX"
                 value={formData.phone}
                 onChange={handleChange}
               />
             </div>
 
-            <div className="form-group">
-              <label>Пароль *</label>
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Пароль * (мінімум 8 символів)
+              </label>
               <input
                 type="password"
                 name="password"
-                className="form-control"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                placeholder="Введіть пароль"
                 value={formData.password}
                 onChange={handleChange}
                 required
@@ -128,26 +156,49 @@ const RegisterPage = () => {
               />
             </div>
 
-            <div className="form-group">
-              <label>Підтвердіть пароль *</label>
+            {/* Confirm Password */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Підтвердіть пароль *
+              </label>
               <input
                 type="password"
                 name="password_confirm"
-                className="form-control"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                placeholder="Повторіть пароль"
                 value={formData.password_confirm}
                 onChange={handleChange}
                 required
               />
             </div>
 
-            <button type="submit" className="btn btn-primary btn-large" disabled={loading}>
-              {loading ? 'Реєстрація...' : 'Зареєструватися'}
+            {/* Register Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition-all transform hover:scale-105 active:scale-95 mt-6"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="animate-spin">⏳</span>
+                  Реєстрація...
+                </span>
+              ) : (
+                'Зареєструватися'
+              )}
             </button>
           </form>
 
-          <div className="auth-footer">
-            <p>
-              Вже є акаунт? <Link to="/login">Увійти</Link>
+          {/* Footer */}
+          <div className="bg-gray-50 px-8 py-6 text-center border-t border-gray-200">
+            <p className="text-gray-700">
+              Вже є акаунт?{' '}
+              <Link
+                to="/login"
+                className="font-semibold text-teal-500 hover:text-teal-600 transition-colors"
+              >
+                Увійти
+              </Link>
             </p>
           </div>
         </div>

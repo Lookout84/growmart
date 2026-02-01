@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import { useAuthStore, useCartStore } from '../store';
-import './ProductDetailPage.css';
+
 
 const ProductDetailPage = () => {
   const { slug } = useParams();
@@ -14,10 +14,7 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchProduct();
-  }, [slug]);
+  const [activeTab, setActiveTab] = useState('description');
 
   const fetchProduct = async () => {
     try {
@@ -31,6 +28,10 @@ const ProductDetailPage = () => {
     }
   };
 
+  useEffect(() => {
+    fetchProduct();
+  }, [slug]);
+
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
       toast.info('Увійдіть, щоб додати товар до кошика');
@@ -39,11 +40,11 @@ const ProductDetailPage = () => {
     }
 
     try {
-      const response = await api.post('/api/cart/add_item/', {
+      await api.post('/api/cart/add_item/', {
         product_id: product.id,
         quantity: quantity,
       });
-      setCart(response.data);
+      setCart(product);
       toast.success('Товар додано до кошика!');
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -51,139 +52,303 @@ const ProductDetailPage = () => {
     }
   };
 
+  const incrementQuantity = () => {
+    if (quantity < product.stock) {
+      setQuantity(quantity + 1);
+    }
+  };
+
+  const decrementQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="loading">
-        <div className="spinner"></div>
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="container">
-        <div className="alert alert-danger">Товар не знайдено</div>
+      <div className="container py-20">
+        <div className="text-center text-red-500">Товар не знайдено</div>
       </div>
     );
   }
 
+  const mainImage = product.images?.[selectedImage]?.image || product.primary_image || '/placeholder.png';
+
   return (
-    <div className="product-detail-page">
-      <div className="container">
-        <div className="product-detail-layout">
-          <div className="product-images">
-            <div className="main-image">
-              <img
-                src={product.images[selectedImage]?.image || '/placeholder.png'}
-                alt={product.name}
-              />
-            </div>
-            {product.images.length > 1 && (
-              <div className="image-thumbnails">
-                {product.images.map((img, index) => (
-                  <img
-                    key={img.id}
-                    src={img.image}
-                    alt={`${product.name} ${index + 1}`}
-                    className={index === selectedImage ? 'active' : ''}
-                    onClick={() => setSelectedImage(index)}
-                  />
-                ))}
+    <div className="min-h-screen bg-gray-50">
+      {/* Breadcrumb */}
+      <div className="bg-white py-3 border-b border-gray-200">
+        <div className="container">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Link to="/" className="hover:text-primary">Головна</Link>
+            <span>→</span>
+            <Link to="/products" className="hover:text-primary">Товари</Link>
+            <span>→</span>
+            <span className="text-gray-900 font-medium">{product.name}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Images */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-3xl overflow-hidden shadow-sm p-4 sticky top-4">
+              {/* Main Image */}
+              <div className="bg-gray-100 rounded-2xl overflow-hidden mb-4 aspect-square flex items-center justify-center">
+                <img 
+                  src={mainImage} 
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
-            )}
+
+              {/* Thumbnails */}
+              {product.images && product.images.length > 1 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {product.images.map((img, index) => (
+                    <button
+                      key={img.id}
+                      onClick={() => setSelectedImage(index)}
+                      className={`rounded-lg overflow-hidden border-2 aspect-square flex items-center justify-center transition-all ${
+                        index === selectedImage 
+                          ? 'border-primary' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <img 
+                        src={img.image} 
+                        alt={`${product.name} ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="product-details">
-            <h1>{product.name}</h1>
-            <p className="sku">Артикул: {product.sku}</p>
-
-            <div className="product-rating">
-              <span className="stars">⭐ {product.average_rating.toFixed(1)}</span>
-              <span className="reviews-count">({product.review_count} відгуків)</span>
-            </div>
-
-            <div className="product-price-section">
-              {product.old_price && (
-                <span className="old-price">{product.old_price} ₴</span>
-              )}
-              <span className="price">{product.final_price} ₴</span>
-              {product.discount_percentage > 0 && (
-                <span className="discount">-{product.discount_percentage}%</span>
-              )}
-            </div>
-
-            <div className="product-stock">
-              {product.in_stock ? (
-                <span className="in-stock">✓ В наявності ({product.stock} шт)</span>
-              ) : (
-                <span className="out-of-stock">✗ Немає в наявності</span>
-              )}
-            </div>
-
-            <div className="product-description">
-              <h3>Опис</h3>
-              <p>{product.description}</p>
-            </div>
-
-            {product.brand && (
-              <div className="product-brand">
-                <strong>Бренд:</strong> {product.brand}
-              </div>
-            )}
-
-            <div className="product-actions">
-              <div className="quantity-selector">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={!product.in_stock}
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  disabled={!product.in_stock}
-                />
-                <button
-                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  disabled={!product.in_stock}
-                >
-                  +
-                </button>
+          {/* Right Column - Info */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-3xl shadow-sm p-8">
+              {/* Status Badge */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+                  ✓ В наявності
+                </span>
               </div>
 
+              {/* Title */}
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
+
+              {/* Sku and Rating */}
+              <div className="flex items-center justify-between mb-6 pb-6 border-b border-gray-200">
+                <p className="text-sm text-gray-600">Артикул: {product.sku || product.id}</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <span 
+                        key={i}
+                        className={`text-lg ${
+                          i < Math.floor(product.average_rating || 5) ? 'text-orange-400' : 'text-gray-300'
+                        }`}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {product.reviews_count || 0} відгуків
+                  </p>
+                </div>
+              </div>
+
+              {/* Price */}
+              <div className="mb-6">
+                <div className="flex items-baseline gap-3">
+                  {product.old_price && (
+                    <span className="text-lg text-gray-400 line-through">
+                      {Math.round(product.old_price)} грн
+                    </span>
+                  )}
+                  <span className="text-4xl font-bold text-red-600">
+                    {Math.round(product.final_price || product.price)} грн
+                  </span>
+                </div>
+              </div>
+
+              {/* Quantity Selector */}
+              <div className="flex items-center gap-4 mb-6">
+                <span className="font-semibold text-gray-700">Кількість:</span>
+                <div className="flex items-center border border-gray-300 rounded-lg">
+                  <button 
+                    onClick={decrementQuantity}
+                    className="px-4 py-2 text-lg hover:bg-gray-100 disabled:opacity-50"
+                    disabled={quantity <= 1}
+                  >
+                    −
+                  </button>
+                  <input 
+                    type="number" 
+                    value={quantity}
+                    readOnly
+                    className="w-12 text-center border-l border-r border-gray-300 py-2"
+                  />
+                  <button 
+                    onClick={incrementQuantity}
+                    className="px-4 py-2 text-lg hover:bg-gray-100 disabled:opacity-50"
+                    disabled={quantity >= product.stock}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Add to Cart Button */}
               <button
-                className="btn btn-primary btn-large"
                 onClick={handleAddToCart}
-                disabled={!product.in_stock}
+                className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-4 rounded-2xl transition-colors mb-4 flex items-center justify-center gap-2 text-lg"
               >
-                Додати до кошика
+                <span>🛒</span>
+                Купити
               </button>
+
+              {/* Special Features */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {product.variety && (
+                  <div className="bg-gray-50 p-3 rounded-lg text-sm">
+                    <p className="text-gray-600 font-semibold">Сорт</p>
+                    <p className="text-gray-900">{product.variety}</p>
+                  </div>
+                )}
+                {product.ripening_time && (
+                  <div className="bg-gray-50 p-3 rounded-lg text-sm">
+                    <p className="text-gray-600 font-semibold">Стиглість</p>
+                    <p className="text-gray-900">{product.ripening_time}</p>
+                  </div>
+                )}
+                {product.age && (
+                  <div className="bg-gray-50 p-3 rounded-lg text-sm">
+                    <p className="text-gray-600 font-semibold">Вік</p>
+                    <p className="text-gray-900">{product.age}</p>
+                  </div>
+                )}
+                {product.height && (
+                  <div className="bg-gray-50 p-3 rounded-lg text-sm">
+                    <p className="text-gray-600 font-semibold">Висота</p>
+                    <p className="text-gray-900">{product.height}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Info Sections */}
+              <div className="space-y-4 text-sm">
+                <div className="flex gap-3 p-3 bg-blue-50 rounded-lg">
+                  <span className="text-lg">🚚</span>
+                  <div>
+                    <p className="font-semibold text-gray-900">Доставка</p>
+                    <p className="text-gray-600">По Україні 1-3 дні</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 p-3 bg-green-50 rounded-lg">
+                  <span className="text-lg">💳</span>
+                  <div>
+                    <p className="font-semibold text-gray-900">Оплата</p>
+                    <p className="text-gray-600">Карта, готівка, переводом</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 p-3 bg-orange-50 rounded-lg">
+                  <span className="text-lg">✅</span>
+                  <div>
+                    <p className="font-semibold text-gray-900">Гарантія</p>
+                    <p className="text-gray-600">На весь товар розповсюджується</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Share */}
+              <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200">
+                <p className="text-gray-600 font-semibold">Поділитися:</p>
+                <button className="w-8 h-8 bg-gray-100 rounded-full hover:bg-primary hover:text-white flex items-center justify-center transition-all">
+                  f
+                </button>
+                <button className="w-8 h-8 bg-gray-100 rounded-full hover:bg-primary hover:text-white flex items-center justify-center transition-all">
+                  🔗
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {product.reviews.length > 0 && (
-          <div className="reviews-section">
-            <h2>Відгуки покупців</h2>
-            <div className="reviews-list">
-              {product.reviews.map((review) => (
-                <div key={review.id} className="review-card">
-                  <div className="review-header">
-                    <span className="review-author">{review.user}</span>
-                    <span className="review-rating">{'⭐'.repeat(review.rating)}</span>
-                  </div>
-                  <h4>{review.title}</h4>
-                  <p>{review.comment}</p>
-                  <span className="review-date">
-                    {new Date(review.created_at).toLocaleDateString('uk-UA')}
-                  </span>
-                </div>
-              ))}
+        {/* Tabs Section */}
+        <div className="mt-12 bg-white rounded-3xl shadow-sm overflow-hidden">
+          <div className="border-b border-gray-200">
+            <div className="flex">
+              <button
+                onClick={() => setActiveTab('description')}
+                className={`flex-1 py-4 font-semibold text-center transition-colors ${
+                  activeTab === 'description'
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Опис
+              </button>
+              <button
+                onClick={() => setActiveTab('reviews')}
+                className={`flex-1 py-4 font-semibold text-center transition-colors ${
+                  activeTab === 'reviews'
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Відгуки
+              </button>
             </div>
           </div>
-        )}
+
+          <div className="p-8">
+            {activeTab === 'description' && (
+              <div className="prose prose-sm max-w-none">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  {product.description || 'Опис товару відсутній'}
+                </p>
+              </div>
+            )}
+
+            {activeTab === 'reviews' && (
+              <div className="text-center py-12">
+                <p className="text-gray-500">Відгуків ще немає</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Related Products */}
+        <div className="mt-16">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">Найчастіше купують</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white rounded-3xl shadow-sm overflow-hidden h-96">
+                <div className="bg-gray-100 h-40"></div>
+                <div className="p-4">
+                  <p className="text-xs text-gray-500 mb-2">Помічник для вас</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
