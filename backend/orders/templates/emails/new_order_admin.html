@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Нове замовлення</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; color: #333; }
+    .wrap { max-width: 620px; margin: 30px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.1); }
+    .header { background: linear-gradient(135deg, #1565C0 0%, #42a5f5 100%); padding: 28px 24px; text-align: center; color: #fff; }
+    .header h1 { margin: 0 0 6px; font-size: 24px; }
+    .header p  { margin: 0; opacity: .9; font-size: 14px; }
+    .body { padding: 28px; }
+    .order-box { background: #e3f2fd; border-left: 4px solid #1e88e5; border-radius: 6px; padding: 14px 18px; margin-bottom: 20px; }
+    .order-box .num { font-size: 22px; font-weight: 700; color: #1565C0; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+    th { background: #e8eaf6; color: #283593; padding: 9px 12px; text-align: left; }
+    td { padding: 9px 12px; border-bottom: 1px solid #e0e0e0; }
+    tr:last-child td { border-bottom: none; }
+    .total-row td { font-weight: 700; background: #f3f4f8; }
+    .client-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; font-size: 14px; }
+    .info-item .label { color: #777; font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
+    .footer { background: #e3f2fd; text-align: center; padding: 16px; font-size: 12px; color: #777; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>🛒 Нове замовлення!</h1>
+    <p>GrowMart — адмін-сповіщення</p>
+  </div>
+
+  <div class="body">
+    <div class="order-box">
+      <p style="margin:2px 0;font-size:13px;">Номер замовлення</p>
+      <p class="num">#{{ order.order_number }}</p>
+      <p style="margin:4px 0;font-size:13px;">Дата: <strong>{{ order.created_at|date:"d.m.Y H:i" }}</strong></p>
+    </div>
+
+    <h3 style="color:#1565C0;margin-bottom:10px;">Клієнт</h3>
+    <div class="client-grid">
+      <div class="info-item">
+        <p class="label">Ім'я</p>
+        <p>{{ order.first_name }} {{ order.last_name }}</p>
+      </div>
+      <div class="info-item">
+        <p class="label">Телефон</p>
+        <p>{{ order.phone }}</p>
+      </div>
+      <div class="info-item">
+        <p class="label">Email</p>
+        <p>{{ order.email }}</p>
+      </div>
+      <div class="info-item">
+        <p class="label">Місто / Адреса</p>
+        <p>{{ order.city }}, {{ order.address }}</p>
+      </div>
+    </div>
+
+    <h3 style="color:#1565C0;margin-bottom:10px;">Товари</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Товар</th>
+          <th>К-ть</th>
+          <th>Ціна</th>
+          <th>Сума</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.product_name }}<br><small style="color:#888;">{{ item.product_sku }}</small></td>
+          <td>{{ item.quantity }}</td>
+          <td>₴{{ item.price }}</td>
+          <td>₴{{ item.total }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+          <td colspan="3">Доставка</td>
+          <td>₴{{ order.shipping_cost }}</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="3">💰 Разом</td>
+          <td>₴{{ order.total }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    {% if order.notes %}
+    <p><strong>Примітки:</strong> {{ order.notes }}</p>
+    {% endif %}
+  </div>
+
+  <div class="footer">
+    <p>GrowMart Admin Notification — автоматичне повідомлення</p>
+  </div>
+</div>
+</body>
+</html>

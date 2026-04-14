@@ -1,6 +1,8 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.text import slugify
+import random
+import string
 
 
 class Category(models.Model):
@@ -70,7 +72,7 @@ class Product(models.Model):
     
     # Inventory
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)], verbose_name='Залишок')
-    sku = models.CharField(max_length=100, unique=True, verbose_name='Артикул (Код товару)')
+    sku = models.CharField(max_length=100, unique=True, blank=True, verbose_name='Артикул (Код товару)')
     
     # Attributes
     brand = models.CharField(max_length=100, blank=True, verbose_name='Бренд')
@@ -105,6 +107,30 @@ class Product(models.Model):
             models.Index(fields=['-created_at']),
         ]
 
+    def _generate_sku(self):
+        """Генерує унікальний артикул для товару"""
+        # Генеруємо випадковий код з 8 символів (літери та цифри)
+        random_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        sku = f"SKU-{random_code}"
+        
+        # Перевіряємо чи артикул вже існує, якщо так - генеруємо новий
+        while Product.objects.filter(sku=sku).exists():
+            random_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            sku = f"SKU-{random_code}"
+        
+        return sku
+
+    def save(self, *args, **kwargs):
+        # Автоматична генерація slug якщо не вказано
+        if not self.slug:
+            self.slug = slugify(self.name)
+        
+        # Автоматична генерація артикулу якщо не вказано
+        if not self.sku:
+            self.sku = self._generate_sku()
+        
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
@@ -117,6 +143,26 @@ class Product(models.Model):
         if self.discount_percentage > 0:
             return self.price * (1 - self.discount_percentage / 100)
         return self.price
+
+
+class ProductVariant(models.Model):
+    """Price variant based on root system size / packaging"""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,
+                                related_name='variants', verbose_name='Товар')
+    name = models.CharField(max_length=100, verbose_name='Назва варіанту',
+                            help_text='Наприклад: Відкритий корінь, Закритий корінь 0.5л')
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Ціна')
+    stock = models.IntegerField(default=0, validators=[MinValueValidator(0)], verbose_name='Залишок')
+    sort_order = models.PositiveSmallIntegerField(default=0, verbose_name='Порядок')
+    is_active = models.BooleanField(default=True, verbose_name='Активний')
+
+    class Meta:
+        ordering = ['sort_order', 'name']
+        verbose_name = 'Варіант товару'
+        verbose_name_plural = 'Варіанти товарів'
+
+    def __str__(self):
+        return f"{self.product.name} — {self.name}"
 
 
 class ProductImage(models.Model):
@@ -140,16 +186,25 @@ class ProductImage(models.Model):
 
 class Review(models.Model):
     """Product Review"""
+    STATUS_PENDING = 'pending'
+    STATUS_APPROVED = 'approved'
+    STATUS_REJECTED = 'rejected'
+    STATUS_CHOICES = [
+        ('pending', 'Очікує перевірки'),
+        ('approved', 'Схвалено'),
+        ('rejected', 'Відхилено'),
+    ]
+
     product = models.ForeignKey(Product, on_delete=models.CASCADE, 
                                related_name='reviews', verbose_name='Товар')
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, 
                             related_name='reviews', verbose_name='Користувач')
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], 
                                 verbose_name='Рейтинг')
-    title = models.CharField(max_length=200, verbose_name='Заголовок')
+    title = models.CharField(max_length=200, blank=True, verbose_name='Заголовок')
     comment = models.TextField(verbose_name='Коментар')
     is_verified_purchase = models.BooleanField(default=False, verbose_name='Підтверджена покупка')
-    is_approved = models.BooleanField(default=False, verbose_name='Схвалено')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending', verbose_name='Статус')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

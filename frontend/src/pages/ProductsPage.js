@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import ProductCard from '../components/ProductCard';
+import PageLoader from '../components/PageLoader';
 
 
 const ProductsPage = () => {
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    search: '',
-    category: '',
+    search: searchParams.get('search') || '',
+    category: searchParams.get('category') || '',
     min_price: '',
     max_price: '',
     in_stock: false,
@@ -45,6 +48,9 @@ const ProductsPage = () => {
 
   useEffect(() => {
     fetchCategories();
+  }, []);
+
+  useEffect(() => {
     fetchProducts();
   }, [filters]);
 
@@ -93,18 +99,18 @@ const ProductsPage = () => {
               {/* Price */}
               <div className="mb-6">
                 <h3 className="text-lg font-bold mb-3">Ціна</h3>
-                <div className="flex gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-3">
                   <input
                     type="number"
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                    className="w-0 flex-1 min-w-0 px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
                     placeholder="Від"
                     value={filters.min_price}
                     onChange={(e) => handleFilterChange('min_price', e.target.value)}
                   />
-                  <span className="flex items-center">−</span>
+                  <span className="flex-shrink-0 text-gray-500">−</span>
                   <input
                     type="number"
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                    className="w-0 flex-1 min-w-0 px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
                     placeholder="До"
                     value={filters.max_price}
                     onChange={(e) => handleFilterChange('max_price', e.target.value)}
@@ -130,9 +136,7 @@ const ProductsPage = () => {
           {/* Products Grid */}
           <div className="flex-1">
             {loading ? (
-              <div className="flex justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
-              </div>
+              <PageLoader fullScreen={false} />
             ) : products.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {products.map((product) => (

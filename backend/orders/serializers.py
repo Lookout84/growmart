@@ -27,3 +27,21 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         model = Order
         fields = ['payment_method', 'delivery_method', 'first_name', 'last_name',
                  'email', 'phone', 'address', 'city', 'postal_code', 'country', 'notes']
+
+
+class GuestOrderItemInputSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField()
+    quantity = serializers.IntegerField(min_value=1, default=1)
+    variant_id = serializers.IntegerField(required=False, allow_null=True, default=None)
+
+
+class GuestOrderCreateSerializer(serializers.ModelSerializer):
+    items = GuestOrderItemInputSerializer(many=True, write_only=True)
+    create_account = serializers.BooleanField(default=False, write_only=True, required=False)
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True, default='')
+
+    class Meta:
+        model = Order
+        fields = ['payment_method', 'delivery_method', 'first_name', 'last_name',
+                  'email', 'phone', 'address', 'city', 'postal_code', 'country',
+                  'notes', 'items', 'create_account', 'password']

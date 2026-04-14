@@ -2,6 +2,40 @@ from django.db import models
 from django.core.validators import MinValueValidator
 
 
+class DeliveryMethod(models.Model):
+    """Configurable delivery methods - activate/deactivate from admin"""
+    code = models.CharField(max_length=30, unique=True, verbose_name='Код')
+    name = models.CharField(max_length=100, verbose_name='Назва')
+    price = models.DecimalField(max_digits=8, decimal_places=2, default=0,
+                                validators=[MinValueValidator(0)], verbose_name='Вартість (₴)')
+    is_active = models.BooleanField(default=True, verbose_name='Активний')
+    sort_order = models.PositiveSmallIntegerField(default=0, verbose_name='Порядок сортування')
+
+    class Meta:
+        ordering = ['sort_order', 'name']
+        verbose_name = 'Спосіб доставки'
+        verbose_name_plural = 'Способи доставки'
+
+    def __str__(self):
+        return f"{self.name} ({'активний' if self.is_active else 'неактивний'})"
+
+
+class PaymentMethod(models.Model):
+    """Configurable payment methods - add/edit/delete from admin"""
+    code = models.CharField(max_length=30, unique=True, verbose_name='Код')
+    name = models.CharField(max_length=100, verbose_name='Назва')
+    is_active = models.BooleanField(default=True, verbose_name='Активний')
+    sort_order = models.PositiveSmallIntegerField(default=0, verbose_name='Порядок сортування')
+
+    class Meta:
+        ordering = ['sort_order', 'name']
+        verbose_name = 'Спосіб оплати'
+        verbose_name_plural = 'Способи оплати'
+
+    def __str__(self):
+        return f"{self.name} ({'активний' if self.is_active else 'неактивний'})"
+
+
 class Order(models.Model):
     """Order Model"""
     STATUS_CHOICES = [
@@ -27,7 +61,8 @@ class Order(models.Model):
         ('pickup', 'Самовивіз'),
     ]
     
-    user = models.ForeignKey('users.User', on_delete=models.CASCADE, 
+    user = models.ForeignKey('users.User', on_delete=models.SET_NULL,
+                            null=True, blank=True,
                             related_name='orders', verbose_name='Користувач')
     order_number = models.CharField(max_length=100, unique=True, verbose_name='Номер замовлення')
     

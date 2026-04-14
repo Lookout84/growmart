@@ -1,5 +1,46 @@
 from django.contrib import admin
-from .models import Order, OrderItem
+from .models import Order, OrderItem, DeliveryMethod, PaymentMethod
+
+
+@admin.register(DeliveryMethod)
+class DeliveryMethodAdmin(admin.ModelAdmin):
+    list_display = ['name', 'code', 'price', 'is_active', 'sort_order']
+    list_editable = ['price', 'is_active', 'sort_order']
+    save_on_top = True
+    ordering = ['sort_order', 'name']
+    actions = ['activate_methods', 'deactivate_methods']
+
+    @admin.action(description='✅ Активувати обрані способи доставки')
+    def activate_methods(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f'Активовано: {updated}')
+
+    @admin.action(description='🚫 Деактивувати обрані способи доставки')
+    def deactivate_methods(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f'Деактивовано: {updated}')
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(PaymentMethod)
+class PaymentMethodAdmin(admin.ModelAdmin):
+    list_display = ['name', 'code', 'is_active', 'sort_order']
+    list_editable = ['is_active', 'sort_order']
+    save_on_top = True
+    ordering = ['sort_order', 'name']
+    actions = ['activate_methods', 'deactivate_methods']
+
+    @admin.action(description='✅ Активувати обрані способи оплати')
+    def activate_methods(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f'Активовано: {updated}')
+
+    @admin.action(description='🚫 Деактивувати обрані способи оплати')
+    def deactivate_methods(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f'Деактивовано: {updated}')
 
 
 class OrderItemInline(admin.TabularInline):

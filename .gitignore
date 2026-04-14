@@ -194,6 +194,17 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# Project specific
+*.sql
+*.sqlite3
+backend/media/
+backend/staticfiles/
+backend/venv/
+backend/.env
+.env
+celerybeat-schedule
+celerybeat.pid
+
 # Cursor
 #  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
 #  exclude from AI features like autocomplete and code analysis. Recommended for sensitive data

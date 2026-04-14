@@ -1,25 +1,47 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import { useAuthStore, useCartStore } from '../store';
+import PageLoader from '../components/PageLoader';
+import ProductCard from '../components/ProductCard';
 
 
 const ProductDetailPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
-  const { setCart } = useCartStore();
+  const { isAuthenticated, user } = useAuthStore();
+  const { setCart, addGuestItem } = useCartStore();
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('description');
+  const [selectedVariant, setSelectedVariant] = useState(null);
+
+  // Related products state
+  const [related, setRelated] = useState([]);
+
+  // Reviews state
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [userReview, setUserReview] = useState(undefined); // undefined=not fetched, null=none, obj=exists
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const fetchProduct = async () => {
     try {
       const response = await api.get(`/api/products/${slug}/`);
-      setProduct(response.data);
+      const prod = response.data;
+      setProduct(prod);
+      // Fetch related products from same category, excluding current
+      if (prod.category?.id) {
+        try {
+          const rel = await api.get(`/api/products/?category=${prod.category.id}&page_size=4`);
+          const items = (rel.data.results || rel.data).filter(p => p.slug !== slug);
+          setRelated(items.slice(0, 4));
+        } catch { /* silent */ }
+      }
     } catch (error) {
       console.error('Error fetching product:', error);
       toast.error('Помилка завантаження товару');
@@ -32,19 +54,67 @@ const ProductDetailPage = () => {
     fetchProduct();
   }, [slug]);
 
+  const fetchReviews = useCallback(async (productId) => {
+    setReviewsLoading(true);
+    try {
+      const res = await api.get(`/api/products/reviews/?product=${productId}`);
+      setReviews(res.data.results || res.data);
+    } catch {
+      // silent
+    } finally {
+      setReviewsLoading(false);
+    }
+  }, []);
+
+  const fetchUserReview = useCallback(async (productId) => {
+    if (!isAuthenticated) { setUserReview(null); return; }
+    try {
+      const res = await api.get(`/api/products/reviews/my_review/?product=${productId}`);
+      setUserReview(res.data || null);
+    } catch {
+      setUserReview(null);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (activeTab === 'reviews' && product) {
+      fetchReviews(product.id);
+      fetchUserReview(product.id);
+    }
+  }, [activeTab, product, fetchReviews, fetchUserReview]);
+
+  // Auto-select first active variant when product loads
+  useEffect(() => {
+    if (product?.variants?.length > 0) {
+      const active = product.variants.find(v => v.is_active);
+      setSelectedVariant(active || null);
+    } else {
+      setSelectedVariant(null);
+    }
+  }, [product]);
+
+  const hasVariants = product?.variants?.length > 0;
+  const displayPrice = selectedVariant
+    ? Number(selectedVariant.price)
+    : Number(product?.final_price || product?.price || 0);
+  const availableStock = selectedVariant ? selectedVariant.stock : (product?.stock || 0);
+
   const handleAddToCart = async () => {
+    if (hasVariants && !selectedVariant) {
+      toast.warning('Оберіть варіант товару');
+      return;
+    }
     if (!isAuthenticated) {
-      toast.info('Увійдіть, щоб додати товар до кошика');
-      navigate('/login');
+      addGuestItem(product, quantity, selectedVariant);
+      toast.success('Товар додано до кошика!');
       return;
     }
 
     try {
-      await api.post('/api/cart/add_item/', {
-        product_id: product.id,
-        quantity: quantity,
-      });
-      setCart(product);
+      const payload = { product_id: product.id, quantity };
+      if (selectedVariant) payload.variant_id = selectedVariant.id;
+      const res = await api.post('/api/cart/add_item/', payload);
+      setCart(res.data);
       toast.success('Товар додано до кошика!');
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -53,7 +123,7 @@ const ProductDetailPage = () => {
   };
 
   const incrementQuantity = () => {
-    if (quantity < product.stock) {
+    if (quantity < availableStock) {
       setQuantity(quantity + 1);
     }
   };
@@ -64,12 +134,44 @@ const ProductDetailPage = () => {
     }
   };
 
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!reviewForm.comment.trim() || reviewForm.comment.trim().length < 10) {
+      toast.error('Відгук має містити щонайменше 10 символів');
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      await api.post('/api/products/reviews/', {
+        product: product.id,
+        rating: reviewForm.rating,
+        comment: reviewForm.comment.trim(),
+      });
+      toast.success('Відгук надіслано на модерацію!');
+      setReviewForm({ rating: 5, comment: '' });
+      await fetchUserReview(product.id);
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Помилка надсилання відгуку');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleDeleteReview = async () => {
+    if (!userReview) return;
+    try {
+      await api.delete(`/api/products/reviews/${userReview.id}/`);
+      toast.success('Відгук видалено');
+      setUserReview(null);
+      setReviewForm({ rating: 5, comment: '' });
+      fetchReviews(product.id);
+    } catch {
+      toast.error('Помилка видалення відгуку');
+    }
+  };
+
   if (loading) {
-    return (
-      <div className="flex justify-center items-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!product) {
@@ -175,23 +277,48 @@ const ProductDetailPage = () => {
               {/* Price */}
               <div className="mb-6">
                 <div className="flex items-baseline gap-3">
-                  {product.old_price && (
+                  {product.old_price && !selectedVariant && (
                     <span className="text-lg text-gray-400 line-through">
                       {Math.round(product.old_price)} грн
                     </span>
                   )}
                   <span className="text-4xl font-bold text-red-600">
-                    {Math.round(product.final_price || product.price)} грн
+                    {Math.round(displayPrice)} грн
                   </span>
                 </div>
               </div>
+
+              {/* Variant selector */}
+              {hasVariants && (
+                <div className="mb-6">
+                  <p className="font-semibold text-gray-700 mb-2">Розмір кореневої системи:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {product.variants.filter(v => v.is_active).map(v => (
+                      <button
+                        key={v.id}
+                        onClick={() => setSelectedVariant(v)}
+                        className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
+                          selectedVariant?.id === v.id
+                            ? 'border-teal-500 bg-teal-50 text-teal-700'
+                            : 'border-gray-300 bg-white text-gray-700 hover:border-teal-400'
+                        } ${v.stock === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                        disabled={v.stock === 0}
+                        title={v.stock === 0 ? 'Немає в наявності' : ''}
+                      >
+                        {v.name}
+                        <span className="ml-1 text-xs opacity-70">— {Math.round(Number(v.price))} грн</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Quantity Selector */}
               <div className="flex items-center gap-4 mb-6">
                 <span className="font-semibold text-gray-700">Кількість:</span>
                 <div className="flex items-center border border-gray-300 rounded-lg">
                   <button 
-                    onClick={decrementQuantity}
+                    onClick={() => { if (quantity > 1) setQuantity(quantity - 1); }}
                     className="px-4 py-2 text-lg hover:bg-gray-100 disabled:opacity-50"
                     disabled={quantity <= 1}
                   >
@@ -206,7 +333,7 @@ const ProductDetailPage = () => {
                   <button 
                     onClick={incrementQuantity}
                     className="px-4 py-2 text-lg hover:bg-gray-100 disabled:opacity-50"
-                    disabled={quantity >= product.stock}
+                    disabled={quantity >= availableStock}
                   >
                     +
                   </button>
@@ -313,7 +440,7 @@ const ProductDetailPage = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Відгуки
+                Відгуки {product.review_count > 0 && <span className="ml-1 text-sm text-gray-400">({product.review_count})</span>}
               </button>
             </div>
           </div>
@@ -328,27 +455,174 @@ const ProductDetailPage = () => {
             )}
 
             {activeTab === 'reviews' && (
-              <div className="text-center py-12">
-                <p className="text-gray-500">Відгуків ще немає</p>
+              <div>
+                {/* Rating summary */}
+                {reviews.length > 0 && (
+                  <div className="flex items-center gap-6 p-5 bg-gray-50 rounded-2xl mb-8">
+                    <div className="text-center shrink-0">
+                      <div className="text-5xl font-bold text-gray-900">
+                        {reviews.length > 0
+                          ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+                          : '—'}
+                      </div>
+                      <div className="flex justify-center gap-0.5 mt-1">
+                        {[1,2,3,4,5].map(s => (
+                          <span key={s} className={`text-xl ${s <= Math.round(reviews.reduce((a,r)=>a+r.rating,0)/reviews.length) ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                        ))}
+                      </div>
+                      <div className="text-sm text-gray-500 mt-1">{reviews.length} відгуків</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* User review status / form */}
+                {isAuthenticated ? (
+                  userReview === undefined ? null : userReview ? (
+                    <div className="mb-8">
+                      {userReview.status === 'pending' && (
+                        <div className="flex items-start gap-4 p-5 bg-yellow-50 border border-yellow-200 rounded-2xl">
+                          <span className="text-2xl">⏳</span>
+                          <div className="flex-1">
+                            <p className="font-semibold text-yellow-800">Ваш відгук очікує модерації</p>
+                            <div className="flex gap-0.5 mt-1">
+                              {[1,2,3,4,5].map(s => (
+                                <span key={s} className={`text-lg ${s <= userReview.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                              ))}
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">{userReview.comment}</p>
+                          </div>
+                          <button onClick={handleDeleteReview} className="text-sm text-red-500 hover:text-red-700 shrink-0">Видалити</button>
+                        </div>
+                      )}
+                      {userReview.status === 'approved' && (
+                        <div className="flex items-start gap-4 p-5 bg-green-50 border border-green-200 rounded-2xl">
+                          <span className="text-2xl">✅</span>
+                          <div className="flex-1">
+                            <p className="font-semibold text-green-800">Ваш відгук опубліковано</p>
+                            <div className="flex gap-0.5 mt-1">
+                              {[1,2,3,4,5].map(s => (
+                                <span key={s} className={`text-lg ${s <= userReview.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                              ))}
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">{userReview.comment}</p>
+                          </div>
+                          <button onClick={handleDeleteReview} className="text-sm text-red-500 hover:text-red-700 shrink-0">Видалити</button>
+                        </div>
+                      )}
+                      {userReview.status === 'rejected' && (
+                        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl">
+                          <p className="text-red-700 font-semibold mb-1">❌ Ваш попередній відгук відхилено</p>
+                          <p className="text-sm text-gray-600">Ви можете написати новий відгук нижче.</p>
+                          <button onClick={handleDeleteReview} className="mt-2 text-sm text-red-500 hover:text-red-700">Видалити і написати заново</button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <form onSubmit={handleSubmitReview} className="mb-10 p-6 bg-gray-50 rounded-2xl border border-gray-200">
+                      <h3 className="text-lg font-bold text-gray-900 mb-4">Залишити відгук</h3>
+                      {/* Star rating selector */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Оцінка</label>
+                        <div className="flex gap-1">
+                          {[1,2,3,4,5].map(s => (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => setReviewForm(f => ({ ...f, rating: s }))}
+                              className={`text-3xl transition-colors ${s <= reviewForm.rating ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-300'}`}
+                            >
+                              ★
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Comment */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Ваш відгук</label>
+                        <textarea
+                          value={reviewForm.comment}
+                          onChange={e => setReviewForm(f => ({ ...f, comment: e.target.value }))}
+                          placeholder="Поділіться враженнями про товар (мінімум 10 символів)..."
+                          rows={4}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none text-sm"
+                          required
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={submittingReview}
+                        className="px-6 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors text-sm"
+                      >
+                        {submittingReview ? 'Надсилається...' : 'Надіслати відгук'}
+                      </button>
+                    </form>
+                  )
+                ) : (
+                  <div className="mb-8 p-5 bg-blue-50 border border-blue-200 rounded-2xl text-center">
+                    <p className="text-gray-700 mb-3">Увійдіть, щоб залишити відгук</p>
+                    <button
+                      onClick={() => navigate('/login')}
+                      className="px-5 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-colors text-sm"
+                    >
+                      Увійти
+                    </button>
+                  </div>
+                )}
+
+                {/* Reviews list */}
+                {reviewsLoading ? (
+                  <div className="text-center py-8 text-gray-400">Завантаження...</div>
+                ) : reviews.length === 0 ? (
+                  <div className="text-center py-10">
+                    <p className="text-4xl mb-3">💬</p>
+                    <p className="text-gray-500">Відгуків ще немає. Будьте першим!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-5">
+                    {reviews.map(review => (
+                      <div key={review.id} className="flex gap-4 p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                        {/* Avatar */}
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 font-bold text-primary text-sm">
+                          {(review.user_display || '?')[0].toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="font-semibold text-gray-900 text-sm">{review.user_display}</span>
+                            <span className="text-xs text-gray-400">
+                              {new Date(review.created_at).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </span>
+                          </div>
+                          <div className="flex gap-0.5 mt-0.5">
+                            {[1,2,3,4,5].map(s => (
+                              <span key={s} className={`text-sm ${s <= review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                            ))}
+                          </div>
+                          {review.title && <p className="font-medium text-gray-800 mt-1 text-sm">{review.title}</p>}
+                          <p className="text-gray-600 mt-1 text-sm leading-relaxed">{review.comment}</p>
+                          {review.is_verified_purchase && (
+                            <span className="inline-block mt-2 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">✓ Підтверджена покупка</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
 
         {/* Related Products */}
-        <div className="mt-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">Найчастіше купують</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white rounded-3xl shadow-sm overflow-hidden h-96">
-                <div className="bg-gray-100 h-40"></div>
-                <div className="p-4">
-                  <p className="text-xs text-gray-500 mb-2">Помічник для вас</p>
-                </div>
-              </div>
-            ))}
+        {related.length > 0 && (
+          <div className="mt-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">Найчастіше купують</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {related.map(p => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

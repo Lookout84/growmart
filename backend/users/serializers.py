@@ -1,7 +1,28 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import get_user_model, authenticate
+from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
+
+
+class EmailOrUsernameTokenSerializer(TokenObtainPairSerializer):
+    """Allow login with either username or email"""
+    def validate(self, attrs):
+        login = attrs.get('username', '')
+        password = attrs.get('password', '')
+
+        # If the value looks like an email, look up the username
+        if '@' in login:
+            try:
+                user_obj = User.objects.get(email__iexact=login)
+                attrs['username'] = user_obj.username
+            except User.DoesNotExist:
+                raise serializers.ValidationError(
+                    {'detail': _('Не знайдено акаунт з таким email')}
+                )
+
+        return super().validate(attrs)
 
 
 class UserSerializer(serializers.ModelSerializer):

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'orders',
     'cart',
     'payments',
+    'content',
 ]
 
 MIDDLEWARE = [
@@ -185,3 +186,15 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY', default='')
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
 STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
+
+# Nova Poshta API
+NOVA_POSHTA_API_KEY = config('NOVA_POSHTA_API_KEY', default='')
+
+# Notification Settings
+ADMIN_NOTIFICATION_EMAIL = config('ADMIN_NOTIFICATION_EMAIL', default='')
+
+# Viber Bot Notifications
+# VIBER_BOT_TOKEN: get from https://developers.viber.com/ (create a bot / public account)
+# VIBER_ADMIN_RECEIVER: Viber user ID of the person who should receive order alerts
+VIBER_BOT_TOKEN = config('VIBER_BOT_TOKEN', default='')
+VIBER_ADMIN_RECEIVER = config('VIBER_ADMIN_RECEIVER', default='')

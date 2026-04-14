@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuthStore } from '../store';
+import PageLoader from '../components/PageLoader';
 
 
 const OrdersPage = () => {
@@ -31,11 +32,7 @@ const OrdersPage = () => {
   }
 
   if (loading) {
-    return (
-      <div className="loading">
-        <div className="spinner"></div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   const getStatusBadgeClass = (status) => {

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 const CategoryCard = ({ category }) => {
   return (
     <Link 
-      to={`/products?category=${category.slug}`} 
+      to={`/products?category=${category.id}`} 
       className="group overflow-hidden rounded-3xl shadow-md hover:shadow-xl transition-all duration-300 h-40 flex items-end bg-cover bg-center relative border border-gray-100"
       style={{backgroundImage: `url(${category.image || '/placeholder-category.jpg'})`}}
     >

@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore, useCartStore } from '../store';
+import logo from '../images/logo.png';
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuthStore();
-  const { totalItems } = useCartStore();
+  const { totalItems, items, guestItems } = useCartStore();
+  const cartCount = isAuthenticated
+    ? items.length
+    : guestItems.length;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const closeMobileMenu = () => {
@@ -14,13 +18,13 @@ const Header = () => {
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="text-3xl">🌿</div>
+            <img src={logo} alt="Зелений куточок" className="h-16 w-auto" />
             <div className="flex flex-col">
-              <span className="font-bold text-primary text-lg">Зелений куточок</span>
-              <span className="text-xs text-gray-600 font-semibold">САДЖАНЦІ</span>
+              <span className="font-bold text-primary text-xl leading-tight">Зелений куточок</span>
+              <span className="text-xs text-gray-500 font-medium tracking-wide">САДЖАНЦІ ЯГІД</span>
             </div>
           </Link>
 
@@ -38,13 +42,13 @@ const Header = () => {
             {/* Cart Icon */}
             <Link to="/cart" className="flex items-center gap-2 text-gray-700 hover:text-primary font-semibold transition-colors">
               <span className="text-xl">🛒</span>
-              <span className="hidden sm:inline">({totalItems})</span>
+              <span className="hidden sm:inline">({cartCount})</span>
             </Link>
 
             {/* User Menu */}
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
-                <span className="hidden sm:inline text-gray-700 font-semibold">{user?.username}</span>
+                <span className="hidden sm:inline text-gray-700 font-semibold">{user?.first_name || user?.username}</span>
                 <Link
                   to="/profile"
                   className="hidden sm:inline px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold"

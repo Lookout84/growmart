@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Підтвердження замовлення</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f8f4; margin: 0; padding: 0; color: #333; }
+    .wrap { max-width: 620px; margin: 30px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.1); }
+    .header { background: linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%); padding: 36px 24px; text-align: center; color: #fff; }
+    .header h1 { margin: 0 0 8px; font-size: 26px; letter-spacing: .5px; }
+    .header p  { margin: 0; opacity: .9; font-size: 14px; }
+    .body { padding: 32px 28px; }
+    .greeting { font-size: 17px; margin-bottom: 20px; }
+    .order-box { background: #e8f5e9; border-left: 4px solid #43a047; border-radius: 6px; padding: 16px 20px; margin-bottom: 24px; }
+    .order-box p { margin: 4px 0; font-size: 14px; }
+    .order-box .num { font-size: 20px; font-weight: 700; color: #2e7d32; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+    th { background: #f1f8e9; color: #33691e; padding: 10px 12px; text-align: left; }
+    td { padding: 10px 12px; border-bottom: 1px solid #e0e0e0; }
+    tr:last-child td { border-bottom: none; }
+    .total-row td { font-weight: 700; font-size: 15px; background: #f9fbe7; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; font-size: 14px; }
+    .info-item p { margin: 2px 0; }
+    .info-item .label { color: #777; font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
+    .footer { background: #f1f8e9; text-align: center; padding: 20px; font-size: 12px; color: #777; }
+    .footer a { color: #43a047; text-decoration: none; }
+    .btn { display: inline-block; margin-top: 8px; background: #43a047; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 15px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Header -->
+  <div class="header">
+    <h1>🌱 GrowMart</h1>
+    <p>Ваше замовлення прийнято!</p>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+    <p class="greeting">Вітаємо, <strong>{{ order.first_name }}</strong>!</p>
+    <p>Дякуємо за покупку. Ваше замовлення успішно оформлено і вже обробляється.</p>
+
+    <!-- Order number box -->
+    <div class="order-box">
+      <p>Номер замовлення</p>
+      <p class="num">#{{ order.order_number }}</p>
+      <p>Статус: <strong>{{ order.get_status_display }}</strong></p>
+    </div>
+
+    <!-- Items table -->
+    <table>
+      <thead>
+        <tr>
+          <th>Товар</th>
+          <th>К-ть</th>
+          <th>Ціна</th>
+          <th>Сума</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.product_name }}</td>
+          <td>{{ item.quantity }}</td>
+          <td>₴{{ item.price }}</td>
+          <td>₴{{ item.total }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+          <td colspan="3">Доставка</td>
+          <td>₴{{ order.shipping_cost }}</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="3">Разом</td>
+          <td>₴{{ order.total }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Delivery info -->
+    <h3 style="color:#2e7d32;margin-bottom:12px;">Дані доставки</h3>
+    <div class="info-grid">
+      <div class="info-item">
+        <p class="label">Одержувач</p>
+        <p>{{ order.first_name }} {{ order.last_name }}</p>
+      </div>
+      <div class="info-item">
+        <p class="label">Телефон</p>
+        <p>{{ order.phone }}</p>
+      </div>
+      <div class="info-item">
+        <p class="label">Місто</p>
+        <p>{{ order.city }}</p>
+      </div>
+      <div class="info-item">
+        <p class="label">Адреса</p>
+        <p>{{ order.address }}</p>
+      </div>
+    </div>
+
+    <p style="font-size:14px;color:#555;">Якщо у вас виникли питання — просто відповідайте на цей лист або зв'яжіться з нами.</p>
+    <a class="btn" href="http://localhost:3000/profile">Мої замовлення</a>
+  </div>
+
+  <div class="footer">
+    <p>© 2026 GrowMart — магазин саджанців</p>
+    <p><a href="http://localhost:3000">growmart.ua</a></p>
+  </div>
+</div>
+</body>
+</html>

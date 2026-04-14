@@ -31,6 +31,8 @@ class CartItem(models.Model):
                             related_name='items', verbose_name='Кошик')
     product = models.ForeignKey('products.Product', on_delete=models.CASCADE, 
                                verbose_name='Товар')
+    variant = models.ForeignKey('products.ProductVariant', on_delete=models.SET_NULL,
+                                null=True, blank=True, verbose_name='Варіант')
     quantity = models.IntegerField(default=1, validators=[MinValueValidator(1)], 
                                   verbose_name='Кількість')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -39,11 +41,13 @@ class CartItem(models.Model):
     class Meta:
         verbose_name = 'Товар у кошику'
         verbose_name_plural = 'Товари у кошику'
-        unique_together = ['cart', 'product']
+        unique_together = ['cart', 'product', 'variant']
 
     def __str__(self):
-        return f"{self.product.name} x {self.quantity}"
+        variant_part = f" ({self.variant.name})" if self.variant else ""
+        return f"{self.product.name}{variant_part} x {self.quantity}"
 
     @property
     def total_price(self):
-        return self.product.final_price * self.quantity
+        unit_price = self.variant.price if self.variant_id else self.product.final_price
+        return unit_price * self.quantity

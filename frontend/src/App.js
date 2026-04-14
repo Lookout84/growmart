@@ -6,6 +6,7 @@ import './App.css';
 
 import Header from './components/Header';
 import Footer from './components/Footer';
+import TopProgressBar from './components/TopProgressBar';
 import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
@@ -25,6 +26,7 @@ function App() {
     <Router>
       <div className="App">
         <Header />
+        <TopProgressBar />
         <main className="main-content">
           <Routes>
             <Route path="/" element={<HomePage />} />

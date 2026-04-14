@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 
@@ -11,6 +11,9 @@ const ProfilePage = () => {
   const [formData, setFormData] = useState({});
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [wishlist, setWishlist] = useState([]);
+  const [loadingWishlist, setLoadingWishlist] = useState(false);
+  const [deliveryLabels, setDeliveryLabels] = useState({});
   const [passwordData, setPasswordData] = useState({
     old_password: '',
     new_password: '',
@@ -35,8 +38,23 @@ const ProfilePage = () => {
   }, [user]);
 
   useEffect(() => {
+    api.get('/api/orders/delivery-methods/', { params: { _: Date.now() } })
+      .then(({ data }) => {
+        const map = {};
+        data.forEach((m) => { map[m.code] = m.name; });
+        setDeliveryLabels(map);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     if (activeTab !== 'orders') return;
     fetchOrders();
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'wishlist') return;
+    fetchWishlist();
   }, [activeTab]);
 
   if (!isAuthenticated) {
@@ -47,7 +65,6 @@ const ProfilePage = () => {
     setLoadingOrders(true);
     try {
       const response = await api.get('/api/orders/');
-      // Обробляємо як пагінований результат або прямо масив
       const ordersData = Array.isArray(response.data) ? response.data : (response.data.results || []);
       setOrders(ordersData);
     } catch (error) {
@@ -56,6 +73,29 @@ const ProfilePage = () => {
       setOrders([]);
     } finally {
       setLoadingOrders(false);
+    }
+  };
+
+  const fetchWishlist = async () => {
+    setLoadingWishlist(true);
+    try {
+      const { data } = await api.get('/api/products/wishlist/');
+      const items = Array.isArray(data) ? data : (data.results || []);
+      setWishlist(items);
+    } catch {
+      setWishlist([]);
+    } finally {
+      setLoadingWishlist(false);
+    }
+  };
+
+  const removeFromWishlist = async (productId) => {
+    try {
+      await api.post('/api/products/wishlist/', { product_id: productId });
+      setWishlist((prev) => prev.filter((item) => item.product.id !== productId));
+      toast.success('Видалено з обраного');
+    } catch {
+      toast.error('Помилка');
     }
   };
 
@@ -177,6 +217,16 @@ const ProfilePage = () => {
               }`}
             >
               Мої замовлення
+            </button>
+            <button
+              onClick={() => setActiveTab('wishlist')}
+              className={`px-6 py-3 font-semibold transition-colors ${
+                activeTab === 'wishlist'
+                  ? 'text-primary border-b-2 border-primary'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              ♥ Обране
             </button>
             <button
               onClick={() => setActiveTab('security')}
@@ -418,11 +468,11 @@ const ProfilePage = () => {
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Сума</p>
-                        <p className="font-semibold text-primary text-lg">₴{order.total_price?.toFixed(2)}</p>
+                        <p className="font-semibold text-primary text-lg">₴{Number(order.total || 0).toFixed(2)}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600">Способ доставки</p>
-                        <p className="font-semibold">{order.delivery_method}</p>
+                        <p className="text-sm text-gray-600">Спосіб доставки</p>
+                        <p className="font-semibold">{deliveryLabels[order.delivery_method] || order.delivery_method}</p>
                       </div>
                     </div>
 
@@ -433,12 +483,58 @@ const ProfilePage = () => {
                           {order.items.map(item => (
                             <div key={item.id} className="text-sm text-gray-600 flex justify-between">
                               <span>{item.product_name} x {item.quantity}</span>
-                              <span className="font-semibold">₴{item.price?.toFixed(2)}</span>
+                              <span className="font-semibold">₴{Number(item.price || 0).toFixed(2)}</span>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'wishlist' && (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">♥ Обране</h2>
+
+            {loadingWishlist ? (
+              <div className="text-center py-12 text-gray-500">Завантаження...</div>
+            ) : wishlist.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-5xl mb-4">🌱</p>
+                <p className="text-gray-600 text-lg mb-4">У вас ще немає обраних товарів</p>
+                <Link to="/products" className="btn-primary inline-block">Переглянути каталог</Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {wishlist.map(({ id, product }) => (
+                  <div key={id} className="group relative bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
+                    <Link to={`/products/${product.slug}`} className="block">
+                      <div className="aspect-square overflow-hidden bg-gray-100">
+                        <img
+                          src={product.primary_image || '/placeholder.png'}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    </Link>
+                    <div className="p-4 flex flex-col gap-2 flex-1">
+                      <Link to={`/products/${product.slug}`} className="font-semibold text-sm text-gray-800 line-clamp-2 hover:text-primary">
+                        {product.name}
+                      </Link>
+                      <p className="text-lg font-bold text-red-600 mt-auto">
+                        {Math.round(product.final_price || product.price)} грн
+                      </p>
+                      <button
+                        onClick={() => removeFromWishlist(product.id)}
+                        className="w-full mt-1 py-2 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 text-sm font-semibold transition-colors"
+                      >
+                        Видалити з обраного
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

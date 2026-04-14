@@ -49,6 +49,17 @@ services:
       - REDIS_URL=redis://redis:6379/1
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - NOVA_POSHTA_API_KEY=a16a0c1ef8ffaa0c52d9500ac54db942
+      # Email notifications (fill in with real credentials)
+      - EMAIL_HOST=smtp.gmail.com
+      - EMAIL_PORT=587
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER:-}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-}
+      # Admin notifications
+      - ADMIN_NOTIFICATION_EMAIL=${ADMIN_NOTIFICATION_EMAIL:-}
+      # Viber bot notifications
+      - VIBER_BOT_TOKEN=${VIBER_BOT_TOKEN:-}
+      - VIBER_ADMIN_RECEIVER=${VIBER_ADMIN_RECEIVER:-}
     depends_on:
       db:
         condition: service_healthy
@@ -71,6 +82,14 @@ services:
       - REDIS_URL=redis://redis:6379/1
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - NOVA_POSHTA_API_KEY=a16a0c1ef8ffaa0c52d9500ac54db942
+      - EMAIL_HOST=smtp.gmail.com
+      - EMAIL_PORT=587
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER:-}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-}
+      - ADMIN_NOTIFICATION_EMAIL=${ADMIN_NOTIFICATION_EMAIL:-}
+      - VIBER_BOT_TOKEN=${VIBER_BOT_TOKEN:-}
+      - VIBER_ADMIN_RECEIVER=${VIBER_ADMIN_RECEIVER:-}
     depends_on:
       - db
       - redis
@@ -92,6 +111,14 @@ services:
       - REDIS_URL=redis://redis:6379/1
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - NOVA_POSHTA_API_KEY=a16a0c1ef8ffaa0c52d9500ac54db942
+      - EMAIL_HOST=smtp.gmail.com
+      - EMAIL_PORT=587
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER:-}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-}
+      - ADMIN_NOTIFICATION_EMAIL=${ADMIN_NOTIFICATION_EMAIL:-}
+      - VIBER_BOT_TOKEN=${VIBER_BOT_TOKEN:-}
+      - VIBER_ADMIN_RECEIVER=${VIBER_ADMIN_RECEIVER:-}
     depends_on:
       - db
       - redis
@@ -106,6 +133,8 @@ services:
       - "3000:3000"
     environment:
       - REACT_APP_API_URL=http://localhost:8000
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
     depends_on:
       - backend
     stdin_open: true

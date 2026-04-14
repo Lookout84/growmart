@@ -1,15 +1,26 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.contrib import messages
 from .models import (
-    Category, Product, ProductImage, Review, 
+    Category, Product, ProductImage, ProductVariant, Review,
     Banner, BlogCategory, BlogPost, Wishlist
 )
+from .utils import generate_product_description
+from .image_utils import add_images_to_product
 
 
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
     fields = ['image', 'alt_text', 'is_primary', 'order']
+
+
+class ProductVariantInline(admin.TabularInline):
+    model = ProductVariant
+    extra = 1
+    fields = ['name', 'price', 'stock', 'sort_order', 'is_active']
+    verbose_name = 'Варіант (розмір кореневої системи)'
+    verbose_name_plural = 'Варіанти ціноутворення (розмір кореневої системи)'
 
 
 @admin.register(Category)
@@ -51,16 +62,23 @@ class ProductAdmin(admin.ModelAdmin):
                    'category', 'variety', 'created_at']
     search_fields = ['name', 'sku', 'description']
     prepopulated_fields = {'slug': ('name',)}
-    inlines = [ProductImageInline]
+    inlines = [ProductVariantInline, ProductImageInline]
     ordering = ['-created_at']
     list_editable = ['is_active', 'is_featured', 'is_new']
+    actions = [
+        'generate_descriptions_ai', 
+        'generate_descriptions_template',
+        'add_images_from_unsplash',
+        'add_images_from_dalle'
+    ]
     
     fieldsets = (
         ('Основна інформація', {
             'fields': ('name', 'slug', 'category', 'brand', 'sku')
         }),
         ('Опис', {
-            'fields': ('short_description', 'description')
+            'fields': ('short_description', 'description'),
+            'description': 'Опис можна згенерувати автоматично через дії адміністратора'
         }),
         ('Ціна та знижки', {
             'fields': ('price', 'old_price', 'discount_percentage')
@@ -82,25 +100,213 @@ class ProductAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+    
+    def generate_descriptions_ai(self, request, queryset):
+        """Генерує описи для вибраних товарів за допомогою AI"""
+        success_count = 0
+        error_count = 0
+        
+        for product in queryset:
+            try:
+                description, short_description = generate_product_description(
+                    product_name=product.name,
+                    category_name=product.category.name if product.category else None,
+                    use_ai=True
+                )
+                
+                product.description = description
+                product.short_description = short_description
+                product.save(update_fields=['description', 'short_description'])
+                success_count += 1
+            except Exception as e:
+                error_count += 1
+                self.message_user(
+                    request, 
+                    f"Помилка при генерації опису для '{product.name}': {str(e)}", 
+                    level=messages.ERROR
+                )
+        
+        if success_count > 0:
+            self.message_user(
+                request, 
+                f"Успішно згенеровано описи для {success_count} товар(ів) за допомогою AI", 
+                level=messages.SUCCESS
+            )
+        if error_count > 0:
+            self.message_user(
+                request, 
+                f"Не вдалося згенерувати описи для {error_count} товар(ів)", 
+                level=messages.WARNING
+            )
+    
+    generate_descriptions_ai.short_description = "🤖 Згенерувати описи (AI)"
+    
+    def generate_descriptions_template(self, request, queryset):
+        """Генерує шаблонні описи для вибраних товарів"""
+        success_count = 0
+        
+        for product in queryset:
+            description, short_description = generate_product_description(
+                product_name=product.name,
+                category_name=product.category.name if product.category else None,
+                use_ai=False
+            )
+            
+            product.description = description
+            product.short_description = short_description
+            product.save(update_fields=['description', 'short_description'])
+            success_count += 1
+        
+        self.message_user(
+            request, 
+            f"Успішно згенеровано шаблонні описи для {success_count} товар(ів)", 
+            level=messages.SUCCESS
+        )
+    
+    generate_descriptions_template.short_description = "📝 Згенерувати описи (Шаблон)"
+    
+    def add_images_from_unsplash(self, request, queryset):
+        """Додає зображення до товарів з Unsplash"""
+        success_count = 0
+        error_count = 0
+        total_images = 0
+        
+        for product in queryset:
+            try:
+                added = add_images_to_product(
+                    product=product,
+                    image_count=3,
+                    use_ai=True,
+                    use_dalle=False
+                )
+                
+                if added > 0:
+                    success_count += 1
+                    total_images += added
+                else:
+                    error_count += 1
+                    
+            except Exception as e:
+                error_count += 1
+                self.message_user(
+                    request,
+                    f"Помилка при додаванні зображень для '{product.name}': {str(e)}",
+                    level=messages.ERROR
+                )
+        
+        if success_count > 0:
+            self.message_user(
+                request,
+                f"Успішно додано {total_images} зображень для {success_count} товар(ів)",
+                level=messages.SUCCESS
+            )
+        if error_count > 0:
+            self.message_user(
+                request,
+                f"Не вдалося додати зображення для {error_count} товар(ів)",
+                level=messages.WARNING
+            )
+    
+    add_images_from_unsplash.short_description = "🖼️ Додати зображення (Unsplash/Pexels)"
+    
+    def add_images_from_dalle(self, request, queryset):
+        """Генерує зображення для товарів через DALL-E"""
+        success_count = 0
+        error_count = 0
+        
+        for product in queryset:
+            try:
+                added = add_images_to_product(
+                    product=product,
+                    image_count=1,
+                    use_ai=False,
+                    use_dalle=True
+                )
+                
+                if added > 0:
+                    success_count += 1
+                else:
+                    error_count += 1
+                    
+            except Exception as e:
+                error_count += 1
+                self.message_user(
+                    request,
+                    f"Помилка при генерації зображення для '{product.name}': {str(e)}",
+                    level=messages.ERROR
+                )
+        
+        if success_count > 0:
+            self.message_user(
+                request,
+                f"Успішно згенеровано зображення для {success_count} товар(ів) через DALL-E",
+                level=messages.SUCCESS
+            )
+        if error_count > 0:
+            self.message_user(
+                request,
+                f"Не вдалося згенерувати зображення для {error_count} товар(ів)",
+                level=messages.WARNING
+            )
+    
+    add_images_from_dalle.short_description = "🎨 Згенерувати зображення (DALL-E AI)"
 
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ['product', 'user', 'rating', 'is_verified_purchase', 
-                   'is_approved', 'created_at']
-    list_filter = ['rating', 'is_verified_purchase', 'is_approved', 'created_at']
-    search_fields = ['product__name', 'user__username', 'title', 'comment']
+    list_display = ['product', 'user', 'rating_stars', 'comment_preview', 'status_badge', 'is_verified_purchase', 'created_at']
+    list_filter = ['status', 'rating', 'is_verified_purchase', 'created_at']
+    search_fields = ['product__name', 'user__username', 'user__first_name', 'user__last_name', 'title', 'comment']
     ordering = ['-created_at']
-    
-    actions = ['approve_reviews', 'disapprove_reviews']
-    
+    readonly_fields = ['user', 'product', 'rating', 'title', 'comment', 'is_verified_purchase', 'created_at']
+    actions = ['approve_reviews', 'reject_reviews']
+
+    fieldsets = (
+        ('Відгук', {
+            'fields': ('product', 'user', 'rating', 'title', 'comment')
+        }),
+        ('Статус та інформація', {
+            'fields': ('status', 'is_verified_purchase', 'created_at')
+        }),
+    )
+
+    def rating_stars(self, obj):
+        return '★' * obj.rating + '☆' * (5 - obj.rating)
+    rating_stars.short_description = 'Рейтинг'
+
+    def comment_preview(self, obj):
+        text = obj.comment or ''
+        return text[:80] + '...' if len(text) > 80 else text
+    comment_preview.short_description = 'Відгук'
+
+    def status_badge(self, obj):
+        colors = {
+            'pending': '#f59e0b',
+            'approved': '#10b981',
+            'rejected': '#ef4444',
+        }
+        labels = {
+            'pending': 'Очікує',
+            'approved': 'Схвалено',
+            'rejected': 'Відхилено',
+        }
+        color = colors.get(obj.status, '#6b7280')
+        label = labels.get(obj.status, obj.status)
+        return format_html(
+            '<span style="background:{};color:white;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;">{}</span>',
+            color, label
+        )
+    status_badge.short_description = 'Статус'
+
     def approve_reviews(self, request, queryset):
-        queryset.update(is_approved=True)
-    approve_reviews.short_description = "Схвалити вибрані відгуки"
-    
-    def disapprove_reviews(self, request, queryset):
-        queryset.update(is_approved=False)
-    disapprove_reviews.short_description = "Відхилити вибрані відгуки"
+        count = queryset.update(status='approved')
+        self.message_user(request, f'✅ {count} відгуків схвалено', messages.SUCCESS)
+    approve_reviews.short_description = '✅ Схвалити вибрані відгуки'
+
+    def reject_reviews(self, request, queryset):
+        count = queryset.update(status='rejected')
+        self.message_user(request, f'❌ {count} відгуків відхилено', messages.WARNING)
+    reject_reviews.short_description = '❌ Відхилити вибрані відгуки'
 
 
 @admin.register(Banner)

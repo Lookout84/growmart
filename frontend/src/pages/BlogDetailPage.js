@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../services/api';
 import { useAuthStore } from '../store';
+import PageLoader from '../components/PageLoader';
 
 
 const BlogDetailPage = () => {
@@ -112,7 +113,7 @@ const BlogDetailPage = () => {
   };
 
   if (loading) {
-    return <div className="loading">Завантаження...</div>;
+    return <PageLoader />;
   }
 
   if (!post) {

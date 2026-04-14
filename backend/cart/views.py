@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from .models import Cart, CartItem
 from products.models import Product
+from products.models import ProductVariant
 from .serializers import CartSerializer, CartItemSerializer
 
 
@@ -31,20 +32,33 @@ class CartViewSet(viewsets.ModelViewSet):
         cart = self.get_object()
         product_id = request.data.get('product_id')
         quantity = request.data.get('quantity', 1)
-        
+        variant_id = request.data.get('variant_id') or None
+
         try:
             product = Product.objects.get(id=product_id, is_active=True)
         except Product.DoesNotExist:
             return Response({'error': 'Товар не знайдено'}, 
                           status=status.HTTP_404_NOT_FOUND)
-        
-        if product.stock < quantity:
-            return Response({'error': 'Недостатньо товару на складі'}, 
-                          status=status.HTTP_400_BAD_REQUEST)
-        
+
+        variant = None
+        if variant_id:
+            try:
+                variant = ProductVariant.objects.get(id=variant_id, product=product, is_active=True)
+            except ProductVariant.DoesNotExist:
+                return Response({'error': 'Варіант товару не знайдено'},
+                              status=status.HTTP_404_NOT_FOUND)
+            if variant.stock < quantity:
+                return Response({'error': 'Недостатньо товару на складі'},
+                              status=status.HTTP_400_BAD_REQUEST)
+        else:
+            if product.stock < quantity:
+                return Response({'error': 'Недостатньо товару на складі'}, 
+                              status=status.HTTP_400_BAD_REQUEST)
+
         cart_item, created = CartItem.objects.get_or_create(
             cart=cart,
             product=product,
+            variant=variant,
             defaults={'quantity': quantity}
         )
         

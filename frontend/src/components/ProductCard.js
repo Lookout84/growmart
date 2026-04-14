@@ -1,19 +1,53 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuthStore, useCartStore, useWishlistStore } from '../store';
+import { toast } from 'react-toastify';
 
 const ProductCard = ({ product }) => {
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const { isAuthenticated } = useAuthStore();
+  const { addItem, addGuestItem } = useCartStore();
+  const { isWishlisted, toggle, fetch, loaded } = useWishlistStore();
+  const navigate = useNavigate();
   const imageUrl = product.primary_image || '/placeholder.png';
+  const wishlisted = isWishlisted(product.id);
 
-  const handleAddToCart = (e) => {
+  // Load wishlist once when authenticated
+  useEffect(() => {
+    if (isAuthenticated && !loaded) fetch();
+  }, [isAuthenticated, loaded, fetch]);
+
+  const handleAddToCart = async (e) => {
     e.preventDefault();
-    console.log('Add to cart:', product.id);
-    // TODO: Implement cart functionality
+    // If product has variants, navigate to detail page to choose
+    if (product.variants && product.variants.length > 0) {
+      navigate(`/products/${product.slug}`);
+      return;
+    }
+    if (!isAuthenticated) {
+      addGuestItem(product, 1, null);
+      toast.success(`"${product.name}" додано до кошика`);
+      return;
+    }
+    try {
+      setAdding(true);
+      await addItem(product.id);
+      toast.success(`"${product.name}" додано до кошика`);
+    } catch (err) {
+      toast.error(err?.response?.data?.error || 'Помилка додавання до кошика');
+    } finally {
+      setAdding(false);
+    }
   };
 
-  const toggleWishlist = (e) => {
+  const toggleWishlist = async (e) => {
     e.preventDefault();
-    setIsWishlisted(!isWishlisted);
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    await toggle(product.id);
+    toast.success(wishlisted ? `"${product.name}" видалено з обраного` : `"${product.name}" додано до обраного`);
   };
 
   const rating = product.average_rating || 5;
@@ -36,12 +70,9 @@ const ProductCard = ({ product }) => {
         {/* Wishlist Button - Top Right */}
         <button 
           className={`absolute top-4 right-4 text-2xl z-20 transition-all drop-shadow-lg hover:scale-110 ${
-            isWishlisted ? 'text-red-500' : 'text-gray-300 hover:text-red-500'
+            wishlisted ? 'text-red-500' : 'text-gray-300 hover:text-red-500'
           }`}
-          onClick={(e) => {
-            e.preventDefault();
-            toggleWishlist(e);
-          }}
+          onClick={toggleWishlist}
         >
           ♥
         </button>
@@ -51,7 +82,7 @@ const ProductCard = ({ product }) => {
       <div className="p-5 flex flex-col gap-3 flex-1">
         {/* Product Code */}
         <p className="text-xs text-gray-500 font-medium tracking-wide">
-          Код товара: {product.sku || product.id}
+          Код товару: {product.sku || product.id}
         </p>
 
         {/* Title - maksimalno 3 reda */}
@@ -82,13 +113,16 @@ const ProductCard = ({ product }) => {
 
         {/* Price Section */}
         <div className="flex items-baseline gap-2.5 mt-auto">
-          {product.old_price && (
+          {product.old_price && !(product.variants?.length > 0) && (
             <span className="text-sm text-gray-400 line-through font-medium">
               {Math.round(product.old_price)} грн
             </span>
           )}
           <span className="text-xl font-bold text-red-600">
-            {Math.round(product.final_price || product.price)} грн
+            {product.variants?.length > 0
+              ? `від ${Math.round(Math.min(...product.variants.filter(v => v.is_active).map(v => Number(v.price))))} грн`
+              : `${Math.round(product.final_price || product.price)} грн`
+            }
           </span>
         </div>
 
@@ -98,10 +132,10 @@ const ProductCard = ({ product }) => {
             e.preventDefault();
             handleAddToCart(e);
           }}
-          disabled={!product.in_stock}
+          disabled={!product.in_stock || adding}
           className="w-full bg-teal-500 hover:bg-teal-600 disabled:bg-gray-300 text-white rounded-2xl py-3 font-bold text-sm transition-all duration-300 hover:shadow-lg hover:scale-105 disabled:cursor-not-allowed disabled:scale-100"
         >
-          🛒 Купити
+          {adding ? 'Додається...' : product.variants?.length > 0 ? 'Вибрати варіант' : '🛒 Купити'}
         </button>
       </div>
     </Link>

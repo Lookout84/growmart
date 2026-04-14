@@ -1,10 +1,14 @@
-from rest_framework import viewsets, filters, permissions
+from rest_framework import viewsets, filters, permissions, mixins, status
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Avg
-from .models import Category, Product, Review, Banner, BlogPost, BlogCategory
+from .models import Category, Product, Review, Banner, BlogPost, BlogCategory, Wishlist
 from .serializers import (CategorySerializer, ProductListSerializer, 
                          ProductDetailSerializer, ReviewSerializer, ReviewCreateSerializer,
-                         BannerSerializer, BlogPostSerializer, BlogCategorySerializer)
+                         BannerSerializer, BlogPostSerializer, BlogCategorySerializer,
+                         ProductCreateSerializer, WishlistSerializer)
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -13,7 +17,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = 'slug'
 
 
-class ProductViewSet(viewsets.ReadOnlyModelViewSet):
+class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_active=True).prefetch_related('images', 'reviews')
     lookup_field = 'slug'
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -23,12 +27,24 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ['-created_at']
     
     def get_serializer_class(self):
-        if self.action == 'retrieve':
+        if self.action == 'create' or self.action == 'update':
+            return ProductCreateSerializer
+        elif self.action == 'retrieve':
             return ProductDetailSerializer
         return ProductListSerializer
     
+    def get_permissions(self):
+        # Створення, оновлення та видалення доступні тільки для адміністраторів
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAdminUser()]
+        return [permissions.AllowAny()]
+    
     def get_queryset(self):
-        queryset = super().get_queryset()
+        # Для адміністраторів показуємо всі товари
+        if self.request.user.is_staff:
+            queryset = Product.objects.all().prefetch_related('images', 'reviews')
+        else:
+            queryset = super().get_queryset()
         
         # Filter by price range
         min_price = self.request.query_params.get('min_price')
@@ -48,24 +64,62 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.filter(is_approved=True)
-    
+    queryset = Review.objects.filter(status='approved').select_related('user', 'product')
+
     def get_serializer_class(self):
         if self.action == 'create':
             return ReviewCreateSerializer
         return ReviewSerializer
-    
+
     def get_permissions(self):
-        if self.action == 'create':
+        if self.action in ['create', 'my_review', 'destroy']:
             return [permissions.IsAuthenticated()]
         return [permissions.AllowAny()]
-    
+
     def get_queryset(self):
-        queryset = super().get_queryset()
+        if self.action == 'list':
+            qs = Review.objects.filter(status='approved').select_related('user')
+        else:
+            qs = Review.objects.all().select_related('user', 'product')
         product_id = self.request.query_params.get('product')
         if product_id:
-            queryset = queryset.filter(product_id=product_id)
-        return queryset
+            qs = qs.filter(product_id=product_id)
+        return qs
+
+    def create(self, request, *args, **kwargs):
+        product_id = request.data.get('product')
+        if Review.objects.filter(user=request.user, product_id=product_id).exists():
+            return Response(
+                {'error': 'Ви вже залишили відгук для цього товару'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        review = serializer.save()
+        try:
+            from orders.tasks import send_new_review_notification
+            send_new_review_notification.delay(review.pk)
+        except Exception:
+            pass
+
+    def perform_destroy(self, instance):
+        if instance.user != self.request.user and not self.request.user.is_staff:
+            raise PermissionDenied('Ви не можете видалити цей відгук')
+        instance.delete()
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def my_review(self, request):
+        product_id = request.query_params.get('product')
+        if not product_id:
+            return Response(None)
+        try:
+            review = Review.objects.select_related('user').get(
+                user=request.user, product_id=product_id
+            )
+            return Response(ReviewSerializer(review).data)
+        except Review.DoesNotExist:
+            return Response(None)
 
 
 class BannerViewSet(viewsets.ReadOnlyModelViewSet):
@@ -93,3 +147,27 @@ class BlogPostViewSet(viewsets.ReadOnlyModelViewSet):
     
     def get_queryset(self):
         return BlogPost.objects.filter(is_published=True)
+
+
+class WishlistViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin,
+                      viewsets.GenericViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = WishlistSerializer
+
+    def get_queryset(self):
+        return (Wishlist.objects
+                .filter(user=self.request.user)
+                .select_related('product')
+                .prefetch_related('product__images')
+                .order_by('-created_at'))
+
+    def create(self, request, *args, **kwargs):
+        product_id = request.data.get('product_id')
+        if not product_id:
+            return Response({'error': 'product_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        existing = Wishlist.objects.filter(user=request.user, product_id=product_id).first()
+        if existing:
+            existing.delete()
+            return Response({'wishlisted': False})
+        Wishlist.objects.create(user=request.user, product_id=product_id)
+        return Response({'wishlisted': True}, status=status.HTTP_201_CREATED)
