@@ -118,12 +118,7 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* Help Text */}
-        <div className="mt-6 text-center text-gray-600 text-sm">
-          <p className="font-semibold mb-2">Для тестування використовуйте:</p>
-          <p><strong>Логін:</strong> admin</p>
-          <p><strong>Пароль:</strong> password123</p>
-        </div>
+
       </div>
     </div>
   );

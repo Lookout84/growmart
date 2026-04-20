@@ -170,7 +170,18 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://frontend:3000",
+    "https://zelenyi-kutochok.com.ua",
+    "https://www.zelenyi-kutochok.com.ua",
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://zelenyi-kutochok.com.ua",
+    "https://www.zelenyi-kutochok.com.ua",
+]
+
+# Trust the X-Forwarded-Proto header from nginx reverse proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
 
 CORS_ALLOW_CREDENTIALS = True
 

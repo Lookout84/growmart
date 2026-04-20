@@ -53,6 +53,20 @@ const SOCIAL_ICONS = {
   other:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
 };
 
+const SOCIAL_COLORS = {
+  facebook:  'hover:bg-[#1877F2]',
+  instagram: 'hover:bg-gradient-to-br hover:from-[#f09433] hover:via-[#e6683c] hover:to-[#dc2743]',
+  telegram:  'hover:bg-[#2CA5E0]',
+  youtube:   'hover:bg-[#FF0000]',
+  tiktok:    'hover:bg-black',
+  twitter:   'hover:bg-black',
+  viber:     'hover:bg-[#7360F2]',
+  whatsapp:  'hover:bg-[#25D366]',
+  linkedin:  'hover:bg-[#0A66C2]',
+  pinterest: 'hover:bg-[#E60023]',
+  other:     'hover:bg-white/20',
+};
+
 const isExternal = (url) => /^https?:\/\//.test(url);
 
 const FooterLink = ({ label, url }) => {
@@ -88,7 +102,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Dynamic sections */}
           {sections.map((section) => (
-            <div key={section.id}>
+            <div key={section.id} className="text-center md:text-left">
               <h4 className="font-bold text-lg mb-4">{section.title}</h4>
               {section.description && (
                 <p className="text-sm text-white/70 mb-3 leading-relaxed">{section.description}</p>
@@ -107,11 +121,11 @@ const Footer = () => {
           ))}
 
           {/* Contacts — always shown from settings */}
-          <div>
+          <div className="text-center md:text-left">
             <h4 className="font-bold text-lg mb-4">Контакти</h4>
             <ul className="space-y-2">
               {settings.phone && (
-                <li className="flex items-center gap-2">
+                <li className="flex items-center justify-center md:justify-start gap-2">
                   <span>📞</span>
                   <a href={`tel:${settings.phone.replace(/\s/g, '')}`} className="hover:text-primary-light transition-colors">
                     {settings.phone}
@@ -119,7 +133,7 @@ const Footer = () => {
                 </li>
               )}
               {settings.email && (
-                <li className="flex items-center gap-2">
+                <li className="flex items-center justify-center md:justify-start gap-2">
                   <span>✉️</span>
                   <a href={`mailto:${settings.email}`} className="hover:text-primary-light transition-colors">
                     {settings.email}
@@ -127,13 +141,13 @@ const Footer = () => {
                 </li>
               )}
               {settings.address && (
-                <li className="flex items-center gap-2">
+                <li className="flex items-center justify-center md:justify-start gap-2">
                   <span>📍</span>
                   <span>{settings.address}</span>
                 </li>
               )}
               {socials.length > 0 && (
-                <li className="flex items-center gap-3 pt-2 flex-wrap">
+                <li className="flex items-center justify-center md:justify-start gap-2 pt-2 flex-wrap">
                   {socials.map((s) => (
                     <a
                       key={s.id}
@@ -141,7 +155,7 @@ const Footer = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                       title={s.name}
-                      className="hover:text-primary-light transition-colors"
+                      className={`flex items-center justify-center w-9 h-9 rounded-full bg-white/15 text-white transition-all duration-200 hover:scale-110 hover:text-white ${SOCIAL_COLORS[s.icon] || SOCIAL_COLORS.other}`}
                     >
                       {SOCIAL_ICONS[s.icon] || SOCIAL_ICONS.other}
                     </a>
@@ -150,15 +164,15 @@ const Footer = () => {
               )}
               {/* Legacy fallback: show hardcoded socials if new socials is empty and old fields set */}
               {socials.length === 0 && (settings.facebook_url || settings.instagram_url || settings.telegram_url) && (
-                <li className="flex items-center gap-3 pt-2">
+                <li className="flex items-center justify-center md:justify-start gap-2 pt-2">
                   {settings.facebook_url && (
-                    <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary-light transition-colors text-xl">fb</a>
+                    <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" title="Facebook" className={`flex items-center justify-center w-9 h-9 rounded-full bg-white/15 text-white transition-all duration-200 hover:scale-110 ${SOCIAL_COLORS.facebook}`}>{SOCIAL_ICONS.facebook}</a>
                   )}
                   {settings.instagram_url && (
-                    <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary-light transition-colors text-xl">ig</a>
+                    <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" title="Instagram" className={`flex items-center justify-center w-9 h-9 rounded-full bg-white/15 text-white transition-all duration-200 hover:scale-110 ${SOCIAL_COLORS.instagram}`}>{SOCIAL_ICONS.instagram}</a>
                   )}
                   {settings.telegram_url && (
-                    <a href={settings.telegram_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary-light transition-colors text-xl">tg</a>
+                    <a href={settings.telegram_url} target="_blank" rel="noopener noreferrer" title="Telegram" className={`flex items-center justify-center w-9 h-9 rounded-full bg-white/15 text-white transition-all duration-200 hover:scale-110 ${SOCIAL_COLORS.telegram}`}>{SOCIAL_ICONS.telegram}</a>
                   )}
                 </li>
               )}

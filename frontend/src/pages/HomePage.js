@@ -121,10 +121,10 @@ const HomePage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-r from-green-500 to-teal-500 text-white text-center">
+      <section className="py-12 sm:py-20 bg-gradient-to-r from-green-500 to-teal-500 text-white text-center">
         <div className="container">
-          <h1 className="text-5xl font-bold mb-4">Якісні саджанці для вашого саду</h1>
-          <p className="text-xl mb-8 opacity-90">Великий вибір малини, полуниці, смородини та інших ягідних культур</p>
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-4">Якісні саджанці для вашого саду</h1>
+          <p className="text-base sm:text-xl mb-8 opacity-90">Великий вибір малини, полуниці, смородини та інших ягідних культур</p>
           <Link to="/products" className="inline-block bg-white text-green-600 font-bold px-8 py-3 rounded-full hover:bg-gray-100 transition-colors">
             Переглянути каталог
           </Link>

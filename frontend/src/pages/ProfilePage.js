@@ -173,20 +173,20 @@ const ProfilePage = () => {
       <div className="container max-w-6xl mx-auto px-4">
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="flex items-center gap-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
             {user?.avatar ? (
               <img 
                 src={user.avatar} 
                 alt={user?.username} 
-                className="w-32 h-32 rounded-full object-cover border-4 border-primary"
+                className="w-20 h-20 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-primary flex-shrink-0"
               />
             ) : (
-              <div className="w-32 h-32 rounded-full bg-primary flex items-center justify-center text-white text-4xl font-bold border-4 border-primary">
+              <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-full bg-primary flex items-center justify-center text-white text-3xl sm:text-4xl font-bold border-4 border-primary flex-shrink-0">
                 {user?.first_name?.[0] || user?.username?.[0]}
               </div>
             )}
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+            <div className="text-center sm:text-left">
+              <h1 className="text-xl sm:text-3xl font-bold text-gray-900">
                 {user?.first_name} {user?.last_name || user?.username}
               </h1>
               <p className="text-gray-600">@{user?.username}</p>
@@ -196,11 +196,11 @@ const ProfilePage = () => {
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200 mb-8">
-          <div className="flex gap-0">
+        <div className="border-b border-gray-200 mb-8 overflow-x-auto">
+          <div className="flex min-w-max">
             <button
               onClick={() => setActiveTab('info')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-4 sm:px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
                 activeTab === 'info'
                   ? 'text-primary border-b-2 border-primary'
                   : 'text-gray-600 hover:text-gray-900'
@@ -210,7 +210,7 @@ const ProfilePage = () => {
             </button>
             <button
               onClick={() => setActiveTab('orders')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-4 sm:px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
                 activeTab === 'orders'
                   ? 'text-primary border-b-2 border-primary'
                   : 'text-gray-600 hover:text-gray-900'
@@ -220,7 +220,7 @@ const ProfilePage = () => {
             </button>
             <button
               onClick={() => setActiveTab('wishlist')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-4 sm:px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
                 activeTab === 'wishlist'
                   ? 'text-primary border-b-2 border-primary'
                   : 'text-gray-600 hover:text-gray-900'
@@ -230,7 +230,7 @@ const ProfilePage = () => {
             </button>
             <button
               onClick={() => setActiveTab('security')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-4 sm:px-6 py-3 font-semibold transition-colors whitespace-nowrap ${
                 activeTab === 'security'
                   ? 'text-primary border-b-2 border-primary'
                   : 'text-gray-600 hover:text-gray-900'
