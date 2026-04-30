@@ -20,6 +20,10 @@ import BlogPage from './pages/BlogPage';
 import BlogDetailPage from './pages/BlogDetailPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
+import StaticPage from './pages/StaticPage';
+import ReviewsPage from './pages/ReviewsPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 function App() {
   return (
@@ -42,6 +46,10 @@ function App() {
             <Route path="/blog/:slug" element={<BlogDetailPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/pages/:slug" element={<StaticPage />} />
+            <Route path="/reviews" element={<ReviewsPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password/:uid/:token" element={<ResetPasswordPage />} />
           </Routes>
         </main>
         <Footer />

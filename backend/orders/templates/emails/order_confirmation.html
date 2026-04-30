@@ -32,7 +32,7 @@
 <div class="wrap">
   <!-- Header -->
   <div class="header">
-    <h1>🌱 GrowMart</h1>
+    <h1>🌱 Зелений куточок</h1>
     <p>Ваше замовлення прийнято!</p>
   </div>
 
@@ -100,12 +100,28 @@
     </div>
 
     <p style="font-size:14px;color:#555;">Якщо у вас виникли питання — просто відповідайте на цей лист або зв'яжіться з нами.</p>
-    <a class="btn" href="http://localhost:3000/profile">Мої замовлення</a>
+
+    {% if order.payment_method == 'card' %}
+    <div style="background:#fff8e1;border-left:4px solid #f9a825;border-radius:6px;padding:16px 20px;margin:20px 0;">
+      <p style="margin:0 0 10px;font-weight:700;font-size:15px;color:#e65100;">💳 Реквізити для оплати</p>
+      <table style="width:100%;font-size:14px;border-collapse:collapse;">
+        <tr><td style="padding:4px 0;color:#777;width:45%;">Отримувач:</td><td style="padding:4px 0;"><strong>ФОП Кравець Ольга Віталіївна</strong></td></tr>
+        <tr><td style="padding:4px 0;color:#777;">IBAN:</td><td style="padding:4px 0;"><strong>UA879358710000067329000077395</strong></td></tr>
+        <tr><td style="padding:4px 0;color:#777;">ІПН/ЄДРПОУ:</td><td style="padding:4px 0;"><strong>3411311942</strong></td></tr>
+        <tr><td style="padding:4px 0;color:#777;">Платіжна установа:</td><td style="padding:4px 0;"><strong>ТОВ НоваПей</strong></td></tr>
+        <tr><td style="padding:4px 0;color:#777;">Призначення платежу:</td><td style="padding:4px 0;">Замовлення #{{ order.order_number }}</td></tr>
+        <tr><td style="padding:4px 0;color:#777;">Сума до оплати:</td><td style="padding:4px 0;"><strong style="color:#2e7d32;">₴{{ order.total }}</strong></td></tr>
+      </table>
+      <p style="margin:10px 0 0;font-size:13px;color:#666;">Після оплати, будь ласка, надішліть підтвердження на <a href="mailto:zzelenyi.kutochok@gmail.com">zzelenyi.kutochok@gmail.com</a></p>
+    </div>
+    {% endif %}
+
+    <a class="btn" href="https://zelenyi-kutochok.com.ua/profile">Мої замовлення</a>
   </div>
 
   <div class="footer">
-    <p>© 2026 GrowMart — магазин саджанців</p>
-    <p><a href="http://localhost:3000">growmart.ua</a></p>
+    <p>© 2026 Зелений куточок — магазин саджанців</p>
+    <p><a href="https://zelenyi-kutochok.com.ua">zelenyi-kutochok.com.ua</a></p>
   </div>
 </div>
 </body>

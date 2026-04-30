@@ -60,7 +60,7 @@ def send_order_confirmation_email(self, order_id):
     try:
         _send_email_with_settings(
             ns=ns,
-            subject=f"Замовлення #{order.order_number} прийнято — GrowMart 🌱",
+            subject=f"Замовлення #{order.order_number} прийнято — Зелений куточок 🌱",
             body=text_body,
             html_body=html_body,
             from_email=from_email,
@@ -111,7 +111,7 @@ def send_new_order_admin_email(self, order_id):
     try:
         _send_email_with_settings(
             ns=ns,
-            subject=f"🛒 Нове замовлення #{order.order_number} — GrowMart",
+            subject=f"🛒 Нове замовлення #{order.order_number} — Зелений куточок",
             body=text_body,
             html_body=html_body,
             from_email=from_email,
@@ -132,6 +132,7 @@ def _send_email_with_settings(ns, subject, body, html_body, from_email, to):
 
     if ns and ns.email_host_user and ns.email_host_password:
         # Use DB-stored SMTP credentials directly
+        import ssl as ssl_lib
         msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
         msg['From'] = from_email
@@ -139,11 +140,23 @@ def _send_email_with_settings(ns, subject, body, html_body, from_email, to):
         msg.attach(MIMEText(body, 'plain', 'utf-8'))
         msg.attach(MIMEText(html_body, 'html', 'utf-8'))
 
-        with smtplib.SMTP(ns.email_host, ns.email_port) as s:
-            if ns.email_use_tls:
-                s.starttls()
-            s.login(ns.email_host_user, ns.email_host_password)
-            s.sendmail(from_email, to, msg.as_bytes())
+        use_ssl = getattr(ns, 'email_use_ssl', False)
+        use_tls = getattr(ns, 'email_use_tls', True)
+        ssl_context = ssl_lib.create_default_context()
+
+        if use_ssl:
+            with smtplib.SMTP_SSL(ns.email_host, ns.email_port, context=ssl_context) as s:
+                s.login(ns.email_host_user, ns.email_host_password)
+                s.sendmail(from_email, to, msg.as_bytes())
+        elif use_tls:
+            with smtplib.SMTP(ns.email_host, ns.email_port) as s:
+                s.starttls(context=ssl_context)
+                s.login(ns.email_host_user, ns.email_host_password)
+                s.sendmail(from_email, to, msg.as_bytes())
+        else:
+            with smtplib.SMTP(ns.email_host, ns.email_port) as s:
+                s.login(ns.email_host_user, ns.email_host_password)
+                s.sendmail(from_email, to, msg.as_bytes())
     else:
         # Fall back to Django's EMAIL_* settings
         msg = EmailMultiAlternatives(subject=subject, body=body, from_email=from_email, to=to)
@@ -180,7 +193,7 @@ def send_new_order_viber_notification(self, order_id):
         f"  • {i.product_name} ×{i.quantity} — ₴{i.total}" for i in order.items.all()
     )
     text = (
-        f"🌱 *Нове замовлення GrowMart*\n\n"
+        f"🌱 *Нове замовлення — Зелений куточок*\n\n"
         f"📦 #{order.order_number}\n"
         f"👤 {order.first_name} {order.last_name}\n"
         f"📞 {order.phone}\n"
@@ -194,7 +207,7 @@ def send_new_order_viber_notification(self, order_id):
     payload = {
         "receiver": receiver,
         "min_api_version": 1,
-        "sender": {"name": "GrowMart"},
+        "sender": {"name": "Зелений куточок"},
         "tracking_data": f"order_{order.order_number}",
         "type": "text",
         "text": text,

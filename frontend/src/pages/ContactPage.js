@@ -19,7 +19,7 @@ const ContactPage = () => {
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    api.get('/content/contact/').then(r => setInfo({ ...DEFAULTS, ...r.data })).catch(() => {});
+    api.get('/api/content/contact/').then(r => setInfo({ ...DEFAULTS, ...r.data })).catch(() => {});
   }, []);
 
   const contactItems = [

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import FooterSettings, FooterSection, FooterLink, FooterSocialLink
+from .models import FooterSettings, FooterSection, FooterLink, FooterSocialLink, StaticPage, SiteReview
 
 
 class FooterLinkSerializer(serializers.ModelSerializer):
@@ -36,7 +36,7 @@ class FooterSettingsSerializer(serializers.ModelSerializer):
                   'address', 'facebook_url', 'instagram_url', 'telegram_url')
 
 
-from .models import AboutContent, ContactContent
+from .models import AboutContent, ContactContent  # noqa: F811 (already partially imported)
 
 
 class AboutContentSerializer(serializers.ModelSerializer):
@@ -64,3 +64,37 @@ class ContactContentSerializer(serializers.ModelSerializer):
             'hours_sunday_label', 'hours_sunday',
             'form_subtitle',
         )
+
+
+class StaticPageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StaticPage
+        fields = ('title', 'slug', 'content', 'meta_description', 'updated_at')
+
+
+class SiteReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SiteReview
+        fields = ('id', 'author', 'rating', 'title', 'comment', 'created_at')
+
+    def get_author(self, obj):
+        name = obj.user.get_full_name()
+        return name if name.strip() else obj.user.username
+
+
+class SiteReviewCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteReview
+        fields = ('rating', 'title', 'comment')
+
+    def validate_comment(self, value):
+        if len(value.strip()) < 10:
+            raise serializers.ValidationError('Відгук має містити щонайменше 10 символів')
+        return value.strip()
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        validated_data['status'] = 'pending'
+        return super().create(validated_data)

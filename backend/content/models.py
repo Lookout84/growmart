@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.db import models
+from django.utils.text import slugify
 
 
 class FooterSettings(models.Model):
@@ -38,7 +40,14 @@ class NotificationSettings(models.Model):
     email_enabled = models.BooleanField(default=True, verbose_name='Надсилати email-сповіщення')
     email_host = models.CharField(max_length=200, default='smtp.gmail.com', verbose_name='SMTP-сервер')
     email_port = models.PositiveSmallIntegerField(default=587, verbose_name='SMTP-порт')
-    email_use_tls = models.BooleanField(default=True, verbose_name='Використовувати TLS')
+    email_use_tls = models.BooleanField(
+        default=True,
+        verbose_name='Використовувати TLS (STARTTLS)',
+        help_text='Для порту 587. Gmail, Outlook, SendGrid — TLS.')
+    email_use_ssl = models.BooleanField(
+        default=False,
+        verbose_name='Використовувати SSL',
+        help_text='Для порту 465. Ukr.net, Meta.ua, деякі хостинги — SSL. TLS і SSL не можна вмикати одночасно.')
     email_host_user = models.CharField(max_length=200, blank=True, verbose_name='Логін (email відправника)')
     email_host_password = models.CharField(
         max_length=500, blank=True,
@@ -100,7 +109,8 @@ class FooterLink(models.Model):
                                 related_name='links', verbose_name='Розділ')
     label = models.CharField(max_length=255, verbose_name='Текст посилання')
     url = models.CharField(max_length=500, verbose_name='URL',
-                           help_text='Внутрішній шлях: /about або зовнішній: https://...')
+                           help_text='Внутрішній шлях: /about або зовнішній: https://... '
+                                     '(заповнюється автоматично якщо прив\'язана сторінка)')
     description = models.TextField(blank=True, verbose_name='Опис',
                                    help_text='Необов\'язковий пояснювальний текст під посиланням')
     order = models.PositiveSmallIntegerField(default=0, verbose_name='Порядок')
@@ -238,3 +248,94 @@ class ContactContent(models.Model):
     def load(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+
+class StaticPage(models.Model):
+    """A generic static page managed via admin and rendered on the frontend."""
+    footer_link = models.OneToOneField(
+        'FooterLink',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='page',
+        verbose_name='Посилання футера',
+        help_text='Якщо вказано — URL посилання буде автоматично встановлено на /pages/<slug>',
+    )
+    title = models.CharField(max_length=255, verbose_name='Заголовок')
+    slug = models.SlugField(
+        max_length=255, unique=True, verbose_name='URL-ключ (slug)',
+        help_text='Заповнюється автоматично. Сторінка буде доступна за адресою /pages/&lt;slug&gt;',
+    )
+    content = models.TextField(
+        verbose_name='Вміст сторінки',
+        help_text='Підтримується HTML-розмітка. Наприклад: &lt;h2&gt;Заголовок&lt;/h2&gt;&lt;p&gt;Текст&lt;/p&gt;',
+    )
+    meta_description = models.CharField(
+        max_length=300, blank=True, verbose_name='Meta-опис (SEO)',
+        help_text='Короткий опис сторінки для пошукових систем (до 300 символів)',
+    )
+    is_active = models.BooleanField(default=True, verbose_name='Активна')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Створено')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Оновлено')
+
+    class Meta:
+        ordering = ['title']
+        verbose_name = 'Статична сторінка'
+        verbose_name_plural = 'Статичні сторінки'
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+        # Auto-update the linked footer link URL
+        if self.footer_link_id:
+            FooterLink.objects.filter(pk=self.footer_link_id).update(
+                url=f'/pages/{self.slug}'
+            )
+
+
+class SiteReview(models.Model):
+    """General store / service review left by registered users."""
+    STATUS_PENDING = 'pending'
+    STATUS_APPROVED = 'approved'
+    STATUS_REJECTED = 'rejected'
+    STATUS_CHOICES = [
+        ('pending', 'Очікує модерації'),
+        ('approved', 'Опубліковано'),
+        ('rejected', 'Відхилено'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='site_reviews',
+        verbose_name='Користувач',
+    )
+    rating = models.PositiveSmallIntegerField(
+        choices=[(i, f'{i} ★') for i in range(1, 6)],
+        verbose_name='Оцінка',
+    )
+    title = models.CharField(max_length=200, blank=True, verbose_name='Заголовок')
+    comment = models.TextField(verbose_name='Відгук')
+    status = models.CharField(
+        max_length=10, choices=STATUS_CHOICES, default='pending', verbose_name='Статус',
+    )
+    admin_note = models.CharField(
+        max_length=300, blank=True, verbose_name='Примітка модератора',
+        help_text='Видно тільки в адмінці',
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Відгук про магазин'
+        verbose_name_plural = 'Відгуки про магазин'
+        unique_together = [('user',)]   # one review per user
+
+    def __str__(self):
+        return f'{self.user} — {self.rating}★ ({self.get_status_display()})'
+
+

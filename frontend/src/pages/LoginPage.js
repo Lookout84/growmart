@@ -105,7 +105,7 @@ const LoginPage = () => {
           </form>
 
           {/* Footer */}
-          <div className="bg-gray-50 px-8 py-6 text-center border-t border-gray-200">
+          <div className="bg-gray-50 px-8 py-6 text-center border-t border-gray-200 space-y-3">
             <p className="text-gray-700">
               Немає акаунту?{' '}
               <Link
@@ -113,6 +113,14 @@ const LoginPage = () => {
                 className="font-semibold text-green-500 hover:text-green-600 transition-colors"
               >
                 Зареєструватися
+              </Link>
+            </p>
+            <p>
+              <Link
+                to="/forgot-password"
+                className="text-sm text-gray-500 hover:text-green-600 transition-colors"
+              >
+                Забули пароль?
               </Link>
             </p>
           </div>

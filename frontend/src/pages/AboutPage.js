@@ -35,7 +35,7 @@ const AboutPage = () => {
   const [content, setContent] = useState(DEFAULTS);
 
   useEffect(() => {
-    api.get('/content/about/').then(r => setContent({ ...DEFAULTS, ...r.data })).catch(() => {});
+    api.get('/api/content/about/').then(r => setContent({ ...DEFAULTS, ...r.data })).catch(() => {});
   }, []);
 
   const stats = [
