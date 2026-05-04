@@ -8,6 +8,7 @@ from django.conf.urls.static import static
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from .sitemap import sitemap_xml
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -35,6 +36,9 @@ urlpatterns = [
     path('api/orders/', include('orders.urls')),
     path('api/payments/', include('payments.urls')),
     path('api/content/', include('content.urls')),
+
+    # SEO
+    path('sitemap.xml', sitemap_xml, name='sitemap'),
 ]
 
 if settings.DEBUG:

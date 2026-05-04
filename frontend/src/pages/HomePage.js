@@ -4,6 +4,7 @@ import api from '../services/api';
 import ProductCard from '../components/ProductCard';
 import PopularCarousel from '../components/PopularCarousel';
 import PageLoader from '../components/PageLoader';
+import useSEO from '../hooks/useSEO';
 
 const CategoriesCarousel = ({ categories }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -91,6 +92,11 @@ const HomePage = () => {
   const [popularProducts, setPopularProducts] = useState([]);
   const [newProducts, setNewProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useSEO(
+    null,
+    'Купити саджанці з доставкою по Україні — магазин Зелений куточок. Малина, полуниця, смородина, агрус, лохина, туя. Нова Пошта 1–3 дні.'
+  );
 
   const fetchData = async () => {
     try {

@@ -24,6 +24,7 @@ import StaticPage from './pages/StaticPage';
 import ReviewsPage from './pages/ReviewsPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import OrderSuccessPage from './pages/OrderSuccessPage';
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
             <Route path="/reviews" element={<ReviewsPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password/:uid/:token" element={<ResetPasswordPage />} />
+            <Route path="/order-success" element={<OrderSuccessPage />} />
           </Routes>
         </main>
         <Footer />

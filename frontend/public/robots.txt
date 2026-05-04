@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+Disallow: /login
+Disallow: /register
+Disallow: /profile
+Disallow: /orders
+Disallow: /cart
+Disallow: /checkout
+Disallow: /order-success
+Disallow: /reset-password/
+Disallow: /forgot-password
+Disallow: /api/
+
+Sitemap: https://zelenyi-kutochok.com.ua/sitemap.xml

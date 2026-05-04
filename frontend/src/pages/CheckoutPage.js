@@ -221,10 +221,16 @@ const CheckoutPage = () => {
         if (response.data.tokens) {
           login(response.data.user, response.data.tokens);
           toast.success(`Замовлення оформлено! Акаунт створено. Ваш логін: ${response.data.user.username}`);
+          navigate('/orders');
         } else {
-          toast.success('Замовлення успішно оформлено!');
+          navigate('/order-success', {
+            state: {
+              orderNumber: response.data.order_number,
+              email: formData.email,
+              paymentMethod: formData.payment_method,
+            },
+          });
         }
-        navigate('/orders');
       }
     } catch (error) {
       console.error('Checkout error:', error);

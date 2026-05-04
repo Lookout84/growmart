@@ -5,6 +5,7 @@ import api from '../services/api';
 import { useAuthStore, useCartStore } from '../store';
 import PageLoader from '../components/PageLoader';
 import ProductCard from '../components/ProductCard';
+import useSEO from '../hooks/useSEO';
 
 
 const ProductDetailPage = () => {
@@ -18,6 +19,49 @@ const ProductDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('description');
   const [selectedVariant, setSelectedVariant] = useState(null);
+
+  const productTitle = product
+    ? `${product.name} — купити саджанець | ціна ${Math.round(product.final_price || product.price)} грн`
+    : null;
+  const productDesc = product
+    ? `Саджанець ${product.name}. ${product.short_description || ''} Доставка Новою Поштою по всій Україні. Гарантія якості.`.trim()
+    : null;
+  const productImage = product?.primary_image || null;
+
+  useSEO(productTitle, productDesc, productImage);
+
+  // Schema.org Product structured data
+  useEffect(() => {
+    if (!product) return;
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description: product.short_description || product.description?.slice(0, 200),
+      sku: product.sku,
+      image: product.primary_image,
+      url: window.location.href,
+      brand: { '@type': 'Brand', name: 'Зелений куточок' },
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'UAH',
+        price: product.final_price || product.price,
+        availability: product.in_stock
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+        seller: { '@type': 'Organization', name: 'Зелений куточок' },
+      },
+    };
+    let el = document.getElementById('schema-product');
+    if (!el) {
+      el = document.createElement('script');
+      el.id = 'schema-product';
+      el.type = 'application/ld+json';
+      document.head.appendChild(el);
+    }
+    el.textContent = JSON.stringify(schema);
+    return () => { const s = document.getElementById('schema-product'); if (s) s.remove(); };
+  }, [product]);
 
   // Related products state
   const [related, setRelated] = useState([]);

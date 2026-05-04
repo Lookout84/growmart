@@ -90,6 +90,13 @@ const ProductCard = ({ product }) => {
           {product.name}
         </h3>
 
+        {/* Short Description */}
+        {product.short_description && (
+          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+            {product.short_description}
+          </p>
+        )}
+
         {/* Rating and Reviews */}
         <div className="flex items-center gap-2">
           {/* Stars */}

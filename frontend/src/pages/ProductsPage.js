@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import ProductCard from '../components/ProductCard';
 import PageLoader from '../components/PageLoader';
+import useSEO from '../hooks/useSEO';
 
 
 const ProductsPage = () => {
@@ -18,6 +19,20 @@ const ProductsPage = () => {
     max_price: '',
     in_stock: false,
   });
+
+  const selectedCategory = categories.find(
+    (c) => String(c.id) === String(filters.category) || c.slug === filters.category
+  );
+  const pageTitle = selectedCategory
+    ? `Купити саджанці ${selectedCategory.name.toLowerCase()} — ціни, сорти, доставка`
+    : filters.search
+    ? `Результати пошуку: ${filters.search}`
+    : 'Каталог саджанців — купити з доставкою по Україні';
+  const pageDesc = selectedCategory
+    ? `${selectedCategory.name} саджанці з доставкою Новою Поштою по всій Україні. Широкий вибір сортів. Гарантія якості. Ціни від 15 грн — Зелений куточок.`
+    : 'Каталог саджанців ягідних культур: малина, полуниця, смородина, агрус, лохина. Доставка по Україні.';
+
+  useSEO(pageTitle, pageDesc);
 
   const fetchCategories = async () => {
     try {
