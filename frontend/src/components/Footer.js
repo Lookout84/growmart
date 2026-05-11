@@ -81,6 +81,7 @@ const Footer = () => {
   const [sections, setSections] = useState(FALLBACK_SECTIONS);
   const [settings, setSettings] = useState(FALLBACK_SETTINGS);
   const [socials, setSocials] = useState([]);
+  const [visitCount, setVisitCount] = useState(null);
 
   useEffect(() => {
     api.get('/api/content/footer/')
@@ -90,6 +91,23 @@ const Footer = () => {
         if (data.socials) setSocials(data.socials);
       })
       .catch(() => { /* use fallback */ });
+  }, []);
+
+  useEffect(() => {
+    const sessionKey = 'zk_visited';
+    const alreadyCounted = sessionStorage.getItem(sessionKey);
+    if (!alreadyCounted) {
+      api.post('/api/content/visit/')
+        .then(({ data }) => {
+          setVisitCount(data.count);
+          sessionStorage.setItem(sessionKey, '1');
+        })
+        .catch(() => {
+          api.get('/api/content/visit/').then(({ data }) => setVisitCount(data.count)).catch(() => {});
+        });
+    } else {
+      api.get('/api/content/visit/').then(({ data }) => setVisitCount(data.count)).catch(() => {});
+    }
   }, []);
 
   const year = new Date().getFullYear();
@@ -180,8 +198,23 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-white/20 pt-6 text-center text-sm">
-          <p>{copyright}</p>
+        <div className="border-t border-white/20 pt-6 text-sm">
+          <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-3">
+            {visitCount !== null ? (
+              <div className="flex items-center gap-2 text-white/60">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-4 h-4 shrink-0">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span>
+                  Нас відвідали: <span className="font-semibold text-white/80">{visitCount.toLocaleString('uk-UA')}</span> разів
+                </span>
+              </div>
+            ) : (
+              <div />
+            )}
+            <p className="text-white/70">{copyright}</p>
+          </div>
         </div>
       </div>
     </footer>

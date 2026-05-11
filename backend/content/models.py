@@ -3,6 +3,27 @@ from django.db import models
 from django.utils.text import slugify
 
 
+class SiteVisitCounter(models.Model):
+    """Singleton — лічильник відвідувань сайту"""
+    count = models.PositiveBigIntegerField(default=0, verbose_name='Кількість відвідувань')
+
+    class Meta:
+        verbose_name = 'Лічильник відвідувань'
+        verbose_name_plural = 'Лічильник відвідувань'
+
+    def __str__(self):
+        return f'Відвідувань: {self.count}'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
 class FooterSettings(models.Model):
     """Global footer settings (singleton)"""
     company_name = models.CharField(max_length=255, default='Зелений куточок', verbose_name='Назва компанії')

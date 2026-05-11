@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     FooterAPIView, AboutContentAPIView, ContactContentAPIView,
     StaticPageDetailView, SiteReviewListCreateView, SiteReviewMyView,
+    VisitCounterView,
 )
 
 urlpatterns = [
@@ -11,4 +12,5 @@ urlpatterns = [
     path('pages/<slug:slug>/', StaticPageDetailView.as_view(), name='static-page-detail'),
     path('reviews/', SiteReviewListCreateView.as_view(), name='site-reviews'),
     path('reviews/my/', SiteReviewMyView.as_view(), name='site-review-my'),
+    path('visit/', VisitCounterView.as_view(), name='visit-counter'),
 ]

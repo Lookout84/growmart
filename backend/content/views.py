@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import NotFound
 from rest_framework import status as http_status
-from django.db.models import Avg, Count
-from .models import FooterSettings, FooterSection, FooterSocialLink, AboutContent, ContactContent, StaticPage, SiteReview
+from django.db.models import Avg, Count, F
+from .models import FooterSettings, FooterSection, FooterSocialLink, AboutContent, ContactContent, StaticPage, SiteReview, SiteVisitCounter
 from .serializers import (
     FooterSettingsSerializer, FooterSectionSerializer, FooterSocialLinkSerializer,
     AboutContentSerializer, ContactContentSerializer, StaticPageSerializer,
@@ -25,6 +25,20 @@ class FooterAPIView(APIView):
             'sections': FooterSectionSerializer(sections, many=True).data,
             'socials': FooterSocialLinkSerializer(socials, many=True).data,
         })
+
+
+class VisitCounterView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        counter = SiteVisitCounter.load()
+        return Response({'count': counter.count})
+
+    def post(self, request):
+        SiteVisitCounter.objects.filter(pk=1).update(count=F('count') + 1)
+        SiteVisitCounter.objects.get_or_create(pk=1)
+        counter = SiteVisitCounter.load()
+        return Response({'count': counter.count})
 
 
 class AboutContentAPIView(APIView):
